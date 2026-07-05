@@ -6,6 +6,37 @@ import Image from "next/image";
 const ADMIN_USER = "admin";
 const ADMIN_PASS = "shanthi123";
 
+type Branch = {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  mapsUrl: string;
+  hours: string;
+  landmark: string;
+};
+
+const BRANCHES: Branch[] = [
+  {
+    id: "papanaickenpalayam",
+    name: "Papanaickenpalayam (Main Showroom)",
+    address: "Shop No. 447, Near Women Paltech, Bharathiyar Road, Papanaickenpalayam, Coimbatore - 641037, Tamil Nadu",
+    phone: "+91 9600325709",
+    mapsUrl: "https://maps.app.goo.gl/5yGWBcwrF5PcJrrg9",
+    hours: "Mon–Sat: 10:00 AM – 8:00 PM IST",
+    landmark: "Near Women Paltech",
+  },
+  {
+    id: "raja-street",
+    name: "Raja Street (Old City Branch)",
+    address: "323, 2nd Floor, Kumaran Complex Shop No. B 8, Raja Street, Coimbatore Old City, Coimbatore - 641001, Tamil Nadu",
+    phone: "+91 9600325709",
+    mapsUrl: "https://maps.app.goo.gl/dSHbXs4kTeaqGrsj8",
+    hours: "Mon–Sat: 10:00 AM – 8:00 PM IST",
+    landmark: "Kumaran Complex, Raja Street",
+  },
+];
+
 type Product = {
   id: number;
   name: string;
@@ -37,8 +68,8 @@ function Img({ src, alt, style, sizes }: { src: string; alt: string; style?: Rea
   return <img src={src} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover", ...style }} />;
 }
 
-function Icon({ name, size = 20, alt }: { name: string; size?: number; alt?: string }) {
-  return <Image src={`/images/ui/${name}.svg`} alt={alt || name} width={size} height={size} style={{ display: "inline-block", verticalAlign: "middle" }} />;
+function Icon({ name, size = 20, alt, style }: { name: string; size?: number; alt?: string; style?: React.CSSProperties }) {
+  return <Image src={`/images/ui/${name}.svg`} alt={alt || name} width={size} height={size} style={{ display: "inline-block", verticalAlign: "middle", ...style }} />;
 }
 
 type CartItem = Product & { qty: number };
@@ -94,6 +125,9 @@ export default function Home() {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pImageRef = useRef<HTMLInputElement>(null);
   const cImageRef = useRef<HTMLInputElement>(null);
+  const [activeBranch, setActiveBranch] = useState<Branch>(BRANCHES[0]);
+
+  const getBranch = (id: string) => BRANCHES.find((b) => b.id === id) || BRANCHES[0];
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
     const file = e.target.files?.[0];
@@ -120,12 +154,12 @@ export default function Home() {
   const [settingsName, setSettingsName] = useState("Shanthi Gold Covering");
   const [settingsCurrency, setSettingsCurrency] = useState("₹");
   const [settingsTagline, setSettingsTagline] = useState("Trusted Impon Jwellery Since 1989");
-  const [settingsPhone, setSettingsPhone] = useState("+91 9600325709");
-  const [settingsAddress, setSettingsAddress] = useState("Coimbatore, Tamil Nadu");
+  const [settingsPhone, setSettingsPhone] = useState(BRANCHES[0].phone);
+  const [settingsAddress, setSettingsAddress] = useState(BRANCHES[0].address);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<{ role: "user" | "bot"; text: string }[]>([
-    { role: "bot", text: "Namaste! Welcome to Shanthi Gold Covering. I'm your virtual jewellery assistant. How can I help you today?" },
+    { role: "bot", text: `Namaste! Welcome to ${BRANCHES[0].name}, Coimbatore. I'm your virtual jewellery assistant. How can I help you today?` },
   ]);
   const [chatTyping, setChatTyping] = useState(false);
 
@@ -305,9 +339,10 @@ export default function Home() {
     const q = input.toLowerCase().trim();
     const catNames = categories.map((c) => c.name.toLowerCase());
     const priceRange = products.length ? `₹${Math.min(...products.map((p) => p.price)).toLocaleString("en-IN")} to ₹${Math.max(...products.map((p) => p.price)).toLocaleString("en-IN")}` : "varies";
+    const branch = activeBranch;
 
-    if (q.match(/\b(hi|hello|hey|namaste|vanakkam)\b/)) return "Namaste! Welcome to Shanthi Gold Covering. We specialise in traditional Impon and gold covering jewellery. What are you looking for?";
-    if (q.match(/\b(who|about|story|history)\b/)) return "Shanthi Gold Covering has been crafting authentic Impon jewellery since 1989. With over 35 years of experience, we serve 50,000+ happy families across Tamil Nadu.";
+    if (q.match(/\b(hi|hello|hey|namaste|vanakkam)\b/)) return `Namaste! Welcome to ${branch.name}, Coimbatore. We specialise in traditional Impon and gold covering jewellery. What are you looking for?`;
+    if (q.match(/\b(who|about|story|history)\b/)) return `${branch.name} is a trusted Impon & 1 Gram Gold Covering jewellery shop at ${branch.address}. We specialise in traditional South Indian designs with Panchaloha five-metal alloy and micro gold plating.`;
     if (q.match(/\b(price|cost|rate|budget|afford)\b/)) return `Our collection ranges from ${priceRange}. We have options for every budget — from daily wear to bridal sets.`;
     if (q.match(/\b(bride|bridal|wedding|结婚)\b/)) return "Our Bridal collection includes complete Impon sets — Haram, Necklace, Bangles, Earrings, Maang Tikka, Vanki & more. Prices start from ₹1,299. Shall I help you find something specific?";
     if (q.match(/\b(necklace|haram|chain)\b/)) return "We have a wide range of necklaces — from ₹599 pendant chains to ₹2,299 bridal necklace sets. Popular picks: Impon Addigai Bridal Set and Temple Haram. Want to see details?";
@@ -322,16 +357,17 @@ export default function Home() {
     if (q.match(/\b(return|refund|exchange)\b/)) return "We have a 7-day hassle-free return policy. If you're not satisfied, you can return or exchange within 7 days of delivery.";
     if (q.match(/\b(pay|payment|cod|upi|card)\b/)) return "We accept UPI, cards, net banking, and Cash on Delivery (COD). All transactions are secure.";
     if (q.match(/\b(material|quality|impon|gold|plating|brass)\b/)) return "All our pieces use genuine Panchaloha (5-metal) alloy with micro gold plating for lasting quality. Materials include Brass, Copper, and 1 Gram Gold Covering.";
-    if (q.match(/\b(contact|call|phone|whatsapp|reach)\b/)) return `You can reach us at +91 9600325709 (Call/WhatsApp). We're available Mon-Sat, 9am to 8pm IST. Coimbatore, Tamil Nadu.`;
+    if (q.match(/\b(contact|call|phone|whatsapp|reach)\b/)) return `You can reach us at ${branch.phone} (Call/WhatsApp). We're available ${branch.hours}.\n\n${branch.address}`;
     if (q.match(/\b(festival|pongal|diwali|navratri)\b/)) return "Check our Festival Season collection! Temple & Festive Jewellery with kemp stone, ruby & emerald designs — perfect for Pongal, Diwali & Navratri.";
     if (q.match(/\b(pendant|dollar)\b/)) return "Our Impon Pendant Dollar Chain at ₹1,199 features a Lakshmi dollar pendant with 30 inch gold plated chain. Religious & auspicious design.";
     if (q.match(/\b(ear.?chain|mattal)\b/)) return "The Ear Chain Mattal (South Indian Style) at ₹599 connects earring to hair clip. White stone & ruby with one gram gold plating.";
     if (q.match(/\b(offer|discount|sale|deal)\b/)) return "We currently have items on sale with up to 40% off! Check our Products section for items marked 'Sale'. Free shipping on orders above ₹1,999.";
-    if (q.match(/\b(shop|buy|order|cart|checkout)\b/)) return "Browse our collection above, add items to your cart, and proceed to checkout. You can also order via WhatsApp at +91 9600325709.";
-    if (q.match(/\b(thank|thanks|ok|bye|goodbye)\b/)) return "Thank you for visiting Shanthi Gold Covering! If you have more questions, feel free to ask. You can also WhatsApp us at +91 9600325709. Have a wonderful day!";
+    if (q.match(/\b(shop|buy|order|cart|checkout)\b/)) return `Browse our collection above, add items to your cart, and proceed to checkout. You can also order via WhatsApp at ${branch.phone}.`;
+    if (q.match(/\b(thank|thanks|ok|bye|goodbye)\b/)) return `Thank you for visiting ${branch.name}! If you have more questions, feel free to ask. You can also WhatsApp us at ${branch.phone}. Have a wonderful day!`;
     if (q.match(/\b(help|support)\b/)) return "I can help with: product info, prices, categories, shipping, returns, payment, and store details. Just ask me anything about our jewellery!";
-    return `Thanks for your message! For detailed assistance, you can:\n\n• WhatsApp us: +91 9600325709\n• Call us: +91 9600325709\n• Browse our products above\n\nOr ask me about our products, prices, shipping, returns, or any specific jewellery piece!`;
-  }, [categories, products]);
+    if (q.match(/\b(branch|location|address|where)\b/)) return `We have two branches in Coimbatore:\n\n1. ${BRANCHES[0].name}\n   ${BRANCHES[0].address}\n   ${BRANCHES[0].hours}\n\n2. ${BRANCHES[1].name}\n   ${BRANCHES[1].address}\n   ${BRANCHES[1].hours}\n\nBoth: ${BRANCHES[0].phone} (Call/WhatsApp)`;
+    return `Thanks for your message! For detailed assistance, you can:\n\n• WhatsApp us: ${branch.phone}\n• Call us: ${branch.phone}\n• Browse our products above\n\nOr ask me about our products, prices, shipping, returns, or any specific jewellery piece!`;
+  }, [categories, products, activeBranch]);
 
   const sendChat = useCallback(() => {
     const text = chatInput.trim();
@@ -375,6 +411,12 @@ export default function Home() {
             <a href="#" onClick={(e) => { e.preventDefault(); scrollTo("testimonials"); }}>Reviews</a>
           </nav>
           <div className="header-actions">
+            <div className="branch-selector" style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 12 }}>
+              <Icon name="location" size={18} style={{ color: "var(--color-gold)" }} />
+              <select className="branch-select" value={activeBranch.id} onChange={(e) => setActiveBranch(getBranch(e.target.value))} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--color-gold3)", background: "var(--color-white)", color: "var(--color-text)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                {BRANCHES.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            </div>
             <button className="icon-btn" title="Search" onClick={() => { scrollTo("products"); setTimeout(() => document.getElementById("search-input")?.focus(), 400); }}><Icon name="search" /></button>
             <button className="icon-btn" title="Admin" onClick={() => setAdminOpen(true)}><Icon name="settings" /></button>
             <button className="icon-btn" onClick={() => setCartOpen(true)}>
@@ -468,7 +510,7 @@ export default function Home() {
           <div className="feature-item"><span className="feature-icon"><Icon name="shipping" size={28} /></span><div><div className="feature-text-title">Free Shipping</div><div className="feature-text-desc">On orders above ₹1,999</div></div></div>
           <div className="feature-item"><span className="feature-icon"><Icon name="quality" size={28} /></span><div><div className="feature-text-title">Quality Guaranteed</div><div className="feature-text-desc">Certified Impon & Gold Covering</div></div></div>
           <div className="feature-item"><span className="feature-icon"><Icon name="returns" size={28} /></span><div><div className="feature-text-title">Easy Returns</div><div className="feature-text-desc">7-day hassle-free returns</div></div></div>
-          <div className="feature-item"><span className="feature-icon"><Icon name="support" size={28} /></span><div><div className="feature-text-title">WhatsApp Support</div><div className="feature-text-desc">Mon — Sat, 9am to 8pm</div></div></div>
+          <div className="feature-item"><span className="feature-icon"><Icon name="support" size={28} /></span><div><div className="feature-text-title">WhatsApp Support</div><div className="feature-text-desc">Mon — Sat, 10am to 8pm</div></div></div>
         </div>
       </div>
 
@@ -587,14 +629,20 @@ export default function Home() {
             <div>
               <div className="about-kicker">Our Story</div>
               <h2 className="about-title">Shanthi Gold Covering —<br /><em>Trusted Since 1989</em></h2>
-              <p className="about-desc">With over 35 years of dedicated craftsmanship, Shanthi Gold Covering has become a trusted name for authentic Impon jewellery in Tamil Nadu. Our pieces are made using traditional five-metal (Panchaloha) techniques combined with modern micro gold plating for lasting quality and brilliant shine.</p>
+              <p className="about-desc">Shanthi Gold Covering is a trusted name for authentic Impon, 1 Gram Gold Covering, and micro gold-plated jewellery in Coimbatore with two convenient locations. Our main showroom at Papanaickenpalayam and Old City branch at Raja Street both specialise in traditional South Indian designs crafted using Panchaloha (five-metal) techniques with modern micro gold plating for lasting quality and brilliant shine. Serving thousands of happy families across Tamil Nadu for over a decade.</p>
               <div className="about-highlights">
                 <div className="hl-item"><div className="hl-icon"><Icon name="quality" size={24} /></div><div className="hl-text"><strong>Guaranteed Impon Quality</strong><span>All pieces made with genuine Panchaloha five-metal alloy, micro gold plated</span></div></div>
                 <div className="hl-item"><div className="hl-icon"><Icon name="sparkle" size={24} /></div><div className="hl-text"><strong>Traditional South Indian Designs</strong><span>Temple motifs, Lakshmi, Peacock, Ruby-Emerald kemp stone designs</span></div></div>
                 <div className="hl-item"><div className="hl-icon"><Icon name="crown" size={24} /></div><div className="hl-text"><strong>Complete Bridal Solutions</strong><span>Full bridal sets for weddings, engagements &amp; Seemantham ceremonies</span></div></div>
-                <div className="hl-item"><div className="hl-icon"><Icon name="support" size={24} /></div><div className="hl-text"><strong>50,000+ Happy Customers</strong><span>Trusted by families across Tamil Nadu and beyond for three generations</span></div></div>
+                <div className="hl-item"><div className="hl-icon"><Icon name="support" size={24} /></div><div className="hl-text"><strong>Thousands of Happy Customers</strong><span>Trusted by families across Tamil Nadu for over a decade</span></div></div>
               </div>
-              <button className="btn-primary" onClick={() => scrollTo("products")}>View All Products</button>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+                {BRANCHES.map((b) => (
+                  <a key={b.id} href={b.mapsUrl} target="_blank" rel="noopener noreferrer" className="btn-maroon" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                    {b.name} <Icon name="location" size={16} />
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -641,6 +689,54 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Branches & Maps */}
+      <section className="section branches-section" id="branches">
+        <div className="section-inner">
+          <div className="section-hd">
+            <div className="section-kicker">Visit Us</div>
+            <h2 className="section-title">Our <em>Branches</em></h2>
+            <div className="divider-ornament">✦</div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '32px', marginTop: '40px' }}>
+            {BRANCHES.map((b) => (
+              <div key={b.id} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ width: '100%', height: '300px', backgroundColor: '#eee' }}>
+                  <iframe 
+                    width="100%" 
+                    height="100%" 
+                    frameBorder="0" 
+                    style={{ border: 0 }}
+                    src={`https://www.google.com/maps?q=${encodeURIComponent(b.name + " " + b.landmark + " Coimbatore")}&output=embed`}
+                    allowFullScreen
+                    loading="lazy"
+                  ></iframe>
+                </div>
+                <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-maroon)', marginBottom: '16px' }}>{b.name}</h3>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+                    <Icon name="location" size={20} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <span style={{ color: 'var(--color-text)', lineHeight: 1.5, fontSize: '0.95rem' }}>{b.address}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                    <Icon name="phone" size={20} />
+                    <span style={{ color: 'var(--color-text)', fontSize: '0.95rem' }}>{b.phone}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 24 }}>
+                    <Icon name="clock" size={20} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <span style={{ color: 'var(--color-text)', fontSize: '0.95rem', lineHeight: 1.5 }}>{b.hours}</span>
+                  </div>
+                  <div style={{ marginTop: 'auto' }}>
+                    <a href={b.mapsUrl} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', width: '100%', textDecoration: 'none' }}>
+                      Get Directions <Icon name="location" size={16} style={{ filter: 'brightness(0) invert(1)' }} />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="site-footer">
         <div className="footer-inner">
@@ -652,7 +748,7 @@ export default function Home() {
                 </div>
                 <div><div className="footer-brand-name">Shanthi Gold Covering</div><div className="footer-brand-sub">Impon Jwellery</div></div>
               </div>
-              <p className="footer-desc">Authentic Impon, Gold Covering &amp; micro gold-plated jewellery. Trusted craftsmanship since 1989. Serving 50,000+ families across Tamil Nadu.</p>
+              <p className="footer-desc">Authentic Impon, 1 Gram Gold Covering &amp; micro gold-plated jewellery. Shop No. 447, Papanaickenpalayam, Coimbatore. Trusted by thousands of families across Tamil Nadu.</p>
               <div className="footer-socials">
                 <div className="social-icon" title="Instagram"><Icon name="instagram" size={24} /></div>
                 <div className="social-icon" title="WhatsApp"><Icon name="whatsapp" size={24} /></div>
@@ -680,13 +776,7 @@ export default function Home() {
                 <li><a href="#">Bulk Orders</a></li>
               </ul>
             </div>
-            <div className="footer-col">
-              <div className="footer-col-title">Contact Us</div>
-              <div className="footer-contact-item"><span className="footer-contact-icon"><Icon name="location" size={18} /></span><span className="footer-contact-text">Coimbatore, Tamil Nadu, India</span></div>
-              <div className="footer-contact-item"><span className="footer-contact-icon"><Icon name="phone" size={18} /></span><span className="footer-contact-text">+91 9600325709</span></div>
-              <div className="footer-contact-item"><span className="footer-contact-icon"><Icon name="whatsapp" size={18} /></span><span className="footer-contact-text">WhatsApp: +91 9600325709</span></div>
-              <div className="footer-contact-item"><span className="footer-contact-icon"><Icon name="clock" size={18} /></span><span className="footer-contact-text">Mon–Sat: 9am – 8pm IST</span></div>
-            </div>
+
           </div>
           <div className="footer-bottom">
             <div className="footer-copy">© 2025 Shanthi Gold Covering Impon Jwellery. All rights reserved.</div>
@@ -1015,7 +1105,7 @@ export default function Home() {
               <button className="chatbot-send" onClick={sendChat} disabled={!chatInput.trim()}><Icon name="add" size={20} /></button>
             </div>
             <div className="chatbot-footer-link">
-              <a href="https://wa.me/919600325709" target="_blank" rel="noopener noreferrer">Chat on WhatsApp instead</a>
+              <a href={`https://wa.me/91${activeBranch.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer">Chat on WhatsApp instead</a>
             </div>
           </div>
         )}
@@ -1025,12 +1115,12 @@ export default function Home() {
       </div>
 
       {/* Floating Call Button */}
-      <a href="tel:+919600325709" className="fab fab-call" title="Call us">
+      <a href={`tel:+91${activeBranch.phone.replace(/\D/g, "")}`} className="fab fab-call" title="Call us">
         <Icon name="phone" size={24} />
       </a>
 
       {/* Floating WhatsApp Button */}
-      <a href="https://wa.me/919600325709?text=Hi%20Shanthi%20Gold%20Covering!%20I%27m%20interested%20in%20your%20jewellery." target="_blank" rel="noopener noreferrer" className="fab fab-whatsapp" title="WhatsApp us">
+      <a href={`https://wa.me/91${activeBranch.phone.replace(/\D/g, "")}?text=Hi%20Shanthi%20Gold%20Covering!%20I%27m%20interested%20in%20your%20jewellery.`} target="_blank" rel="noopener noreferrer" className="fab fab-whatsapp" title="WhatsApp us">
         <Icon name="whatsapp" size={26} />
       </a>
     </>
