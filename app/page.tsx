@@ -3,6 +3,9 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 
+const ADMIN_USER = "admin";
+const ADMIN_PASS = "shanthi123";
+
 const JEWEL_EMOJIS = [
   "📿","💎","💍","👑","✨","🪷","🪬","🔮","💫","🌟",
   "⭐","🌙","🪩","🔱","💫","🛍️","📿","🎀","🔮","✨",
@@ -73,6 +76,11 @@ export default function Home() {
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
   const [adminOpen, setAdminOpen] = useState(false);
   const [adminSection, setAdminSection] = useState("dashboard");
+  const [adminAuth, setAdminAuth] = useState(false);
+  const [loginUser, setLoginUser] = useState("");
+  const [loginPass, setLoginPass] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginShake, setLoginShake] = useState(false);
   const [editingProduct, setEditingProduct] = useState<number | null>(null);
   const [editingCategory, setEditingCategory] = useState<number | null>(null);
   const [toastMsg, setToastMsg] = useState<{ icon: string; msg: string } | null>(null);
@@ -106,6 +114,33 @@ export default function Home() {
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Check persisted admin session
+  useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem("sgc_admin") === "1") {
+      setAdminAuth(true);
+    }
+  }, []);
+
+  const handleLogin = () => {
+    if (loginUser === ADMIN_USER && loginPass === ADMIN_PASS) {
+      setAdminAuth(true);
+      sessionStorage.setItem("sgc_admin", "1");
+      setLoginError("");
+      setLoginUser("");
+      setLoginPass("");
+    } else {
+      setLoginError("Invalid username or password");
+      setLoginShake(true);
+      setTimeout(() => setLoginShake(false), 500);
+    }
+  };
+
+  const handleLogout = () => {
+    setAdminAuth(false);
+    sessionStorage.removeItem("sgc_admin");
+    setAdminSection("dashboard");
   };
 
   // Cart
@@ -665,161 +700,190 @@ export default function Home() {
 
       {/* Admin Panel */}
       <div className={`admin-panel ${adminOpen ? "open" : ""}`}>
-        <div className="admin-sidebar">
-          <div className="admin-logo">
-            <div className="admin-logo-main">Shanthi Admin</div>
-            <div className="admin-logo-sub">Dashboard</div>
-          </div>
-          <div className="admin-nav">
-            {[
-              { id: "dashboard", icon: "📊", label: "Dashboard" },
-              { id: "products-admin", icon: "💎", label: "Products" },
-              { id: "add-product", icon: "➕", label: "Add Product" },
-              { id: "categories-admin", icon: "📿", label: "Categories" },
-              { id: "add-category", icon: "📁", label: "Add Category" },
-            ].map((item) => (
-              <div key={item.id} className={`admin-nav-item ${adminSection === item.id ? "active" : ""}`} onClick={() => setAdminSection(item.id)}>
-                <span className="admin-nav-icon">{item.icon}</span><span>{item.label}</span>
+        {!adminAuth ? (
+          /* Login Screen */
+          <div className="admin-login">
+            <div className={`admin-login-card ${loginShake ? "shake" : ""}`}>
+              <Image src="/logo.png" alt="Shanthi Gold Covering" width={72} height={72} className="admin-login-logo" />
+              <h2 className="admin-login-title">Admin Login</h2>
+              <p className="admin-login-desc">Sign in to manage your store</p>
+              <div className="admin-login-form">
+                <div className="form-group">
+                  <label className="form-label">Username</label>
+                  <input className="form-input" type="text" placeholder="Enter username" value={loginUser} onChange={(e) => { setLoginUser(e.target.value); setLoginError(""); }} onKeyDown={(e) => e.key === "Enter" && handleLogin()} autoFocus />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Password</label>
+                  <input className="form-input" type="password" placeholder="Enter password" value={loginPass} onChange={(e) => { setLoginPass(e.target.value); setLoginError(""); }} onKeyDown={(e) => e.key === "Enter" && handleLogin()} />
+                </div>
+                {loginError && <div className="admin-login-error">{loginError}</div>}
+                <button className="btn-save admin-login-btn" onClick={handleLogin}>Sign In</button>
               </div>
-            ))}
-            <div className="admin-nav-divider"></div>
-            <div className={`admin-nav-item ${adminSection === "settings" ? "active" : ""}`} onClick={() => setAdminSection("settings")}>
-              <span className="admin-nav-icon">⚙️</span><span>Settings</span>
+              <button className="admin-login-back" onClick={() => setAdminOpen(false)}>← Back to Store</button>
             </div>
           </div>
-          <div className="admin-bottom">
-            <button className="admin-close-btn" onClick={() => setAdminOpen(false)}><span>✕</span><span>Exit Admin</span></button>
-          </div>
-        </div>
-        <div className="admin-main">
-          <div className="admin-topbar">
-            <div className="admin-page-title">{adminTitles[adminSection] || adminSection}</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 12, color: "var(--color-gray)" }}>Admin</span>
-              <div style={{ width: 36, height: 36, background: "linear-gradient(135deg, var(--color-maroon), var(--color-gold))", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "var(--color-cream)", fontSize: 13 }}>S</div>
-            </div>
-          </div>
-          <div className="admin-content">
-            {/* Dashboard */}
-            <div className={`admin-section ${adminSection === "dashboard" ? "active" : ""}`}>
-              <div className="stats-grid">
-                <div className="stat-card"><div className="stat-label">Total Products</div><div className="stat-value">{products.length}</div><div className="stat-change up">↑ {activeProductCount} active</div></div>
-                <div className="stat-card"><div className="stat-label">Categories</div><div className="stat-value">{categories.length}</div><div className="stat-change up">All active</div></div>
-                <div className="stat-card"><div className="stat-label">Cart Value</div><div className="stat-value">{currency}{cartValue.toLocaleString("en-IN")}</div><div className="stat-change up">Live</div></div>
+        ) : (
+          /* Authenticated Admin Panel */
+          <>
+            <div className="admin-sidebar">
+              <div className="admin-logo">
+                <Image src="/logo.png" alt="Admin" width={32} height={32} style={{ borderRadius: "50%", marginBottom: 6 }} />
+                <div className="admin-logo-main">Shanthi Admin</div>
+                <div className="admin-logo-sub">Dashboard</div>
+              </div>
+              <div className="admin-nav">
+                {[
+                  { id: "dashboard", icon: "📊", label: "Dashboard" },
+                  { id: "products-admin", icon: "💎", label: "Products" },
+                  { id: "add-product", icon: "➕", label: "Add Product" },
+                  { id: "categories-admin", icon: "📿", label: "Categories" },
+                  { id: "add-category", icon: "📁", label: "Add Category" },
+                ].map((item) => (
+                  <div key={item.id} className={`admin-nav-item ${adminSection === item.id ? "active" : ""}`} onClick={() => setAdminSection(item.id)}>
+                    <span className="admin-nav-icon">{item.icon}</span><span>{item.label}</span>
+                  </div>
+                ))}
+                <div className="admin-nav-divider"></div>
+                <div className={`admin-nav-item ${adminSection === "settings" ? "active" : ""}`} onClick={() => setAdminSection("settings")}>
+                  <span className="admin-nav-icon">⚙️</span><span>Settings</span>
+                </div>
+              </div>
+              <div className="admin-bottom">
+                <button className="admin-close-btn" onClick={handleLogout}><span>🚪</span><span>Logout</span></button>
+                <button className="admin-close-btn" style={{ marginTop: 6, background: "rgba(200,146,42,0.15)", color: "var(--color-gold3)", borderColor: "rgba(200,146,42,0.25)" }} onClick={() => setAdminOpen(false)}><span>✕</span><span>Close</span></button>
               </div>
             </div>
+            <div className="admin-main">
+              <div className="admin-topbar">
+                <div className="admin-page-title">{adminTitles[adminSection] || adminSection}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 12, color: "var(--color-gray)" }}>Admin</span>
+                  <div style={{ width: 36, height: 36, background: "linear-gradient(135deg, var(--color-maroon), var(--color-gold))", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "var(--color-cream)", fontSize: 13 }}>A</div>
+                </div>
+              </div>
+              <div className="admin-content">
+                {/* Dashboard */}
+                <div className={`admin-section ${adminSection === "dashboard" ? "active" : ""}`}>
+                  <div className="stats-grid">
+                    <div className="stat-card"><div className="stat-label">Total Products</div><div className="stat-value">{products.length}</div><div className="stat-change up">↑ {activeProductCount} active</div></div>
+                    <div className="stat-card"><div className="stat-label">Categories</div><div className="stat-value">{categories.length}</div><div className="stat-change up">All active</div></div>
+                    <div className="stat-card"><div className="stat-label">Cart Value</div><div className="stat-value">{currency}{cartValue.toLocaleString("en-IN")}</div><div className="stat-change up">Live</div></div>
+                  </div>
+                </div>
 
-            {/* Products List */}
-            <div className={`admin-section ${adminSection === "products-admin" ? "active" : ""}`}>
-              <div className="admin-table-wrap">
-                <div className="admin-table-header"><div className="admin-table-title">All Jewellery Products</div><button className="btn-add" onClick={() => { clearProductForm(); setEditingProduct(null); setAdminSection("add-product"); }}>+ Add Product</button></div>
-                <table>
-                  <thead><tr><th>Icon</th><th>Name</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
-                  <tbody>
-                    {products.map((p) => (
-                      <tr key={p.id}>
-                        <td className="td-emoji">{p.emoji}</td>
-                        <td className="td-name">{p.name}</td>
-                        <td>{p.category}</td>
-                        <td className="td-price">{currency}{p.price.toLocaleString("en-IN")}</td>
-                        <td><span className={`td-badge ${p.status}`}>{p.status}</span></td>
-                        <td><div className="action-group"><button className="table-action-btn btn-edit" onClick={() => editProduct(p.id)}>Edit</button><button className="table-action-btn btn-delete" onClick={() => deleteProduct(p.id)}>Delete</button></div></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                {/* Products List */}
+                <div className={`admin-section ${adminSection === "products-admin" ? "active" : ""}`}>
+                  <div className="admin-table-wrap">
+                    <div className="admin-table-header"><div className="admin-table-title">All Jewellery Products</div><button className="btn-add" onClick={() => { clearProductForm(); setEditingProduct(null); setAdminSection("add-product"); }}>+ Add Product</button></div>
+                    <table>
+                      <thead><tr><th>Icon</th><th>Name</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+                      <tbody>
+                        {products.map((p) => (
+                          <tr key={p.id}>
+                            <td className="td-emoji">{p.emoji}</td>
+                            <td className="td-name">{p.name}</td>
+                            <td>{p.category}</td>
+                            <td className="td-price">{currency}{p.price.toLocaleString("en-IN")}</td>
+                            <td><span className={`td-badge ${p.status}`}>{p.status}</span></td>
+                            <td><div className="action-group"><button className="table-action-btn btn-edit" onClick={() => editProduct(p.id)}>Edit</button><button className="table-action-btn btn-delete" onClick={() => deleteProduct(p.id)}>Delete</button></div></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
 
-            {/* Add Product */}
-            <div className={`admin-section ${adminSection === "add-product" ? "active" : ""}`}>
-              <div className="form-section">
-                <div className="form-section-title">💎 <span>{editingProduct !== null ? "Edit Product" : "Add New Product"}</span></div>
-                <div className="form-grid">
-                  <div className="form-group"><label className="form-label">Product Name *</label><input className="form-input" type="text" placeholder="e.g. Impon Addigai Necklace Set" value={pName} onChange={(e) => setPName(e.target.value)} /></div>
-                  <div className="form-group"><label className="form-label">Category *</label><select className="form-input form-select" value={pCategory} onChange={(e) => setPCategory(e.target.value)}><option value="">Select Category</option>{activeCategories.map((c) => <option key={c.id} value={c.name}>{c.emoji} {c.name}</option>)}</select></div>
-                  <div className="form-group"><label className="form-label">Price (₹) *</label><input className="form-input" type="number" placeholder="e.g. 2299" min="0" value={pPrice} onChange={(e) => setPPrice(e.target.value)} /></div>
-                  <div className="form-group"><label className="form-label">Original Price ₹ (for sale)</label><input className="form-input" type="number" placeholder="e.g. 3500" min="0" value={pPriceOld} onChange={(e) => setPPriceOld(e.target.value)} /></div>
-                  <div className="form-group full"><label className="form-label">Description</label><textarea className="form-input form-textarea" placeholder="Describe the jewellery piece..." value={pDesc} onChange={(e) => setPDesc(e.target.value)} /></div>
-                  <div className="form-group"><label className="form-label">Badge</label><select className="form-input form-select" value={pBadge} onChange={(e) => setPBadge(e.target.value)}><option value="">None</option><option value="new">New Arrival</option><option value="sale">Sale</option><option value="trending">Trending</option><option value="bridal">Bridal</option></select></div>
-                  <div className="form-group"><label className="form-label">Status</label><select className="form-input form-select" value={pStatus} onChange={(e) => setPStatus(e.target.value)}><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
-                  <div className="form-group full"><label className="form-label">Icon / Emoji</label>
-                    <div className="emoji-picker">
-                      {JEWEL_EMOJIS.map((e, i) => (
-                        <div key={i} className={`emoji-option ${pEmoji === e ? "selected" : ""}`} onClick={() => setPEmoji(e)}>{e}</div>
-                      ))}
+                {/* Add Product */}
+                <div className={`admin-section ${adminSection === "add-product" ? "active" : ""}`}>
+                  <div className="form-section">
+                    <div className="form-section-title">💎 <span>{editingProduct !== null ? "Edit Product" : "Add New Product"}</span></div>
+                    <div className="form-grid">
+                      <div className="form-group"><label className="form-label">Product Name *</label><input className="form-input" type="text" placeholder="e.g. Impon Addigai Necklace Set" value={pName} onChange={(e) => setPName(e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Category *</label><select className="form-input form-select" value={pCategory} onChange={(e) => setPCategory(e.target.value)}><option value="">Select Category</option>{activeCategories.map((c) => <option key={c.id} value={c.name}>{c.emoji} {c.name}</option>)}</select></div>
+                      <div className="form-group"><label className="form-label">Price (₹) *</label><input className="form-input" type="number" placeholder="e.g. 2299" min="0" value={pPrice} onChange={(e) => setPPrice(e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Original Price ₹ (for sale)</label><input className="form-input" type="number" placeholder="e.g. 3500" min="0" value={pPriceOld} onChange={(e) => setPPriceOld(e.target.value)} /></div>
+                      <div className="form-group full"><label className="form-label">Description</label><textarea className="form-input form-textarea" placeholder="Describe the jewellery piece..." value={pDesc} onChange={(e) => setPDesc(e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Badge</label><select className="form-input form-select" value={pBadge} onChange={(e) => setPBadge(e.target.value)}><option value="">None</option><option value="new">New Arrival</option><option value="sale">Sale</option><option value="trending">Trending</option><option value="bridal">Bridal</option></select></div>
+                      <div className="form-group"><label className="form-label">Status</label><select className="form-input form-select" value={pStatus} onChange={(e) => setPStatus(e.target.value)}><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+                      <div className="form-group full"><label className="form-label">Icon / Emoji</label>
+                        <div className="emoji-picker">
+                          {JEWEL_EMOJIS.map((e, i) => (
+                            <div key={i} className={`emoji-option ${pEmoji === e ? "selected" : ""}`} onClick={() => setPEmoji(e)}>{e}</div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="form-btn-row" style={{ marginTop: 18 }}>
+                      <button className="btn-save" onClick={saveProduct}>💾 Save Product</button>
+                      <button className="btn-cancel" onClick={() => { clearProductForm(); setEditingProduct(null); setAdminSection("products-admin"); }}>Cancel</button>
                     </div>
                   </div>
                 </div>
-                <div className="form-btn-row" style={{ marginTop: 18 }}>
-                  <button className="btn-save" onClick={saveProduct}>💾 Save Product</button>
-                  <button className="btn-cancel" onClick={() => { clearProductForm(); setEditingProduct(null); setAdminSection("products-admin"); }}>Cancel</button>
+
+                {/* Categories List */}
+                <div className={`admin-section ${adminSection === "categories-admin" ? "active" : ""}`}>
+                  <div className="admin-table-wrap">
+                    <div className="admin-table-header"><div className="admin-table-title">All Categories</div><button className="btn-add" onClick={() => { setCName(""); setCStatus("active"); setCEmoji(""); setEditingCategory(null); setAdminSection("add-category"); }}>+ Add Category</button></div>
+                    <table>
+                      <thead><tr><th>Icon</th><th>Name</th><th>Products</th><th>Status</th><th>Actions</th></tr></thead>
+                      <tbody>
+                        {categories.map((c) => {
+                          const n = products.filter((p) => p.category === c.name).length;
+                          return (
+                            <tr key={c.id}>
+                              <td className="td-emoji">{c.emoji}</td>
+                              <td className="td-name">{c.name}</td>
+                              <td>{n}</td>
+                              <td><span className={`td-badge ${c.status}`}>{c.status}</span></td>
+                              <td><div className="action-group"><button className="table-action-btn btn-edit" onClick={() => editCategory(c.id)}>Edit</button><button className="table-action-btn btn-delete" onClick={() => deleteCategory(c.id)}>Delete</button></div></td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Categories List */}
-            <div className={`admin-section ${adminSection === "categories-admin" ? "active" : ""}`}>
-              <div className="admin-table-wrap">
-                <div className="admin-table-header"><div className="admin-table-title">All Categories</div><button className="btn-add" onClick={() => { setCName(""); setCStatus("active"); setCEmoji(""); setEditingCategory(null); setAdminSection("add-category"); }}>+ Add Category</button></div>
-                <table>
-                  <thead><tr><th>Icon</th><th>Name</th><th>Products</th><th>Status</th><th>Actions</th></tr></thead>
-                  <tbody>
-                    {categories.map((c) => {
-                      const n = products.filter((p) => p.category === c.name).length;
-                      return (
-                        <tr key={c.id}>
-                          <td className="td-emoji">{c.emoji}</td>
-                          <td className="td-name">{c.name}</td>
-                          <td>{n}</td>
-                          <td><span className={`td-badge ${c.status}`}>{c.status}</span></td>
-                          <td><div className="action-group"><button className="table-action-btn btn-edit" onClick={() => editCategory(c.id)}>Edit</button><button className="table-action-btn btn-delete" onClick={() => deleteCategory(c.id)}>Delete</button></div></td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Add Category */}
-            <div className={`admin-section ${adminSection === "add-category" ? "active" : ""}`}>
-              <div className="form-section">
-                <div className="form-section-title">📿 <span>{editingCategory !== null ? "Edit Category" : "Add New Category"}</span></div>
-                <div className="form-grid">
-                  <div className="form-group"><label className="form-label">Category Name *</label><input className="form-input" type="text" placeholder="e.g. Maang Tikka" value={cName} onChange={(e) => setCName(e.target.value)} /></div>
-                  <div className="form-group"><label className="form-label">Status</label><select className="form-input form-select" value={cStatus} onChange={(e) => setCStatus(e.target.value)}><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
-                  <div className="form-group full"><label className="form-label">Icon</label>
-                    <div className="emoji-picker">
-                      {JEWEL_EMOJIS.map((e, i) => (
-                        <div key={i} className={`emoji-option ${cEmoji === e ? "selected" : ""}`} onClick={() => setCEmoji(e)}>{e}</div>
-                      ))}
+                {/* Add Category */}
+                <div className={`admin-section ${adminSection === "add-category" ? "active" : ""}`}>
+                  <div className="form-section">
+                    <div className="form-section-title">📿 <span>{editingCategory !== null ? "Edit Category" : "Add New Category"}</span></div>
+                    <div className="form-grid">
+                      <div className="form-group"><label className="form-label">Category Name *</label><input className="form-input" type="text" placeholder="e.g. Maang Tikka" value={cName} onChange={(e) => setCName(e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Status</label><select className="form-input form-select" value={cStatus} onChange={(e) => setCStatus(e.target.value)}><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+                      <div className="form-group full"><label className="form-label">Icon</label>
+                        <div className="emoji-picker">
+                          {JEWEL_EMOJIS.map((e, i) => (
+                            <div key={i} className={`emoji-option ${cEmoji === e ? "selected" : ""}`} onClick={() => setCEmoji(e)}>{e}</div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="form-btn-row" style={{ marginTop: 18 }}>
+                      <button className="btn-save" onClick={saveCategory}>💾 Save Category</button>
+                      <button className="btn-cancel" onClick={() => { setCName(""); setEditingCategory(null); setAdminSection("categories-admin"); }}>Cancel</button>
                     </div>
                   </div>
                 </div>
-                <div className="form-btn-row" style={{ marginTop: 18 }}>
-                  <button className="btn-save" onClick={saveCategory}>💾 Save Category</button>
-                  <button className="btn-cancel" onClick={() => { setCName(""); setEditingCategory(null); setAdminSection("categories-admin"); }}>Cancel</button>
-                </div>
-              </div>
-            </div>
 
-            {/* Settings */}
-            <div className={`admin-section ${adminSection === "settings" ? "active" : ""}`}>
-              <div className="form-section">
-                <div className="form-section-title">⚙️ Store Settings</div>
-                <div className="form-grid">
-                  <div className="form-group"><label className="form-label">Store Name</label><input className="form-input" type="text" value={settingsName} onChange={(e) => setSettingsName(e.target.value)} /></div>
-                  <div className="form-group"><label className="form-label">Currency</label><select className="form-input form-select" value={settingsCurrency} onChange={(e) => setSettingsCurrency(e.target.value)}><option value="₹">INR (₹)</option><option value="$">USD ($)</option><option value="£">GBP (£)</option></select></div>
-                  <div className="form-group full"><label className="form-label">Tagline</label><input className="form-input" type="text" value={settingsTagline} onChange={(e) => setSettingsTagline(e.target.value)} /></div>
-                  <div className="form-group"><label className="form-label">Phone / WhatsApp</label><input className="form-input" type="text" value={settingsPhone} onChange={(e) => setSettingsPhone(e.target.value)} /></div>
-                  <div className="form-group"><label className="form-label">Address</label><input className="form-input" type="text" value={settingsAddress} onChange={(e) => setSettingsAddress(e.target.value)} /></div>
+                {/* Settings */}
+                <div className={`admin-section ${adminSection === "settings" ? "active" : ""}`}>
+                  <div className="form-section">
+                    <div className="form-section-title">⚙️ Store Settings</div>
+                    <div className="form-grid">
+                      <div className="form-group"><label className="form-label">Store Name</label><input className="form-input" type="text" value={settingsName} onChange={(e) => setSettingsName(e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Currency</label><select className="form-input form-select" value={settingsCurrency} onChange={(e) => setSettingsCurrency(e.target.value)}><option value="₹">INR (₹)</option><option value="$">USD ($)</option><option value="£">GBP (£)</option></select></div>
+                      <div className="form-group full"><label className="form-label">Tagline</label><input className="form-input" type="text" value={settingsTagline} onChange={(e) => setSettingsTagline(e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Phone / WhatsApp</label><input className="form-input" type="text" value={settingsPhone} onChange={(e) => setSettingsPhone(e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Address</label><input className="form-input" type="text" value={settingsAddress} onChange={(e) => setSettingsAddress(e.target.value)} /></div>
+                    </div>
+                    <div className="form-btn-row" style={{ marginTop: 18 }}><button className="btn-save" onClick={saveSettings}>💾 Save Settings</button></div>
+                  </div>
                 </div>
-                <div className="form-btn-row" style={{ marginTop: 18 }}><button className="btn-save" onClick={saveSettings}>💾 Save Settings</button></div>
               </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
 
       {/* Toast */}
