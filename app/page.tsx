@@ -6,19 +6,13 @@ import Image from "next/image";
 const ADMIN_USER = "admin";
 const ADMIN_PASS = "shanthi123";
 
-const JEWEL_EMOJIS = [
-  "📿","💎","💍","👑","✨","🪷","🪬","🔮","💫","🌟",
-  "⭐","🌙","🪩","🔱","💫","🛍️","📿","🎀","🔮","✨",
-  "💠","💎","🏵️","🎀","💫","🌟","✨","💎","✨","✨",
-];
-
 type Product = {
   id: number;
   name: string;
   category: string;
   price: number;
   oldPrice: number | null;
-  emoji: string;
+  image: string;
   badge: string;
   status: string;
   desc: string;
@@ -31,38 +25,46 @@ type Product = {
 type Category = {
   id: number;
   name: string;
-  emoji: string;
+  image: string;
   status: string;
 };
+
+function renderImageOrEmoji(value: string, style?: React.CSSProperties) {
+  const isImage = value.startsWith("data:") || value.startsWith("http");
+  if (isImage) {
+    return <img src={value} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 8, ...style }} />;
+  }
+  return <span style={{ fontSize: "inherit", ...style }}>{value}</span>;
+}
 
 type CartItem = Product & { qty: number };
 
 const initialProducts: Product[] = [
-  { id: 1, name: "Impon Addigai Bridal Necklace Set", category: "Necklace Sets", price: 2299, oldPrice: 3999, emoji: "📿", badge: "bridal", status: "active", desc: "Traditional Impon Addigai necklace with matching earrings. Micro gold plated with ruby & emerald kemp stones. Perfect for weddings & bridal ceremonies.", material: "Copper & Brass", finish: "Micro Gold Plating", weight: "65g", occasion: "Bridal / Wedding" },
-  { id: 2, name: "Temple Haram Long Necklace", category: "Haram & Long Necklaces", price: 1399, oldPrice: 2100, emoji: "🪬", badge: "sale", status: "active", desc: "Traditional South Indian temple haram with Lakshmi dollar design. Ruby-emerald stone studded. 26 inch length with extension chain.", material: "Panchaloha (5 Metal)", finish: "Impon Gold Plating", weight: "48g", occasion: "Wedding / Festival" },
-  { id: 3, name: "Impon Gold Bangles Set (12 pcs)", category: "Bangles", price: 1149, oldPrice: 4950, emoji: "💎", badge: "trending", status: "active", desc: "Traditional micro gold plated Impon bangles with American Diamond stones. Set of 12. Festive & traditional wear.", material: "Brass", finish: "Micro Gold Plating", weight: "90g (set)", occasion: "Festival / Daily" },
-  { id: 4, name: "Impon Jhumka Earrings", category: "Earrings", price: 699, oldPrice: 1400, emoji: "✨", badge: "sale", status: "active", desc: "South Indian Jimiki jhumka design earrings in Impon finish. Ruby stone setting with hanging pearl drops. Screw lock for secure fit.", material: "Brass", finish: "Impon", weight: "18g (pair)", occasion: "Daily / Festival" },
-  { id: 5, name: "Maang Tikka with Pearl Chain", category: "Maang Tikka", price: 549, oldPrice: null, emoji: "🔮", badge: "new", status: "active", desc: "Traditional Maang Tikka with pearl & kemp stone setting. Gold plated finish. Adjustable chain length. Perfect for bridal & functions.", material: "Brass", finish: "Gold Plating", weight: "22g", occasion: "Bridal / Wedding" },
-  { id: 6, name: "Impon Finger Rings Set (6 pcs)", category: "Rings", price: 499, oldPrice: null, emoji: "💍", badge: "new", status: "active", desc: "Set of 6 traditional Impon finger rings with various stone settings. Adjustable size. Suitable for daily & festive wear.", material: "Brass", finish: "Impon", weight: "30g (set)", occasion: "Daily / Festival" },
-  { id: 7, name: "Gold Covering Necklace with AD Stones", category: "Necklace Sets", price: 1899, oldPrice: 2800, emoji: "🌟", badge: "trending", status: "active", desc: "Premium 2 gram gold covering necklace with American Diamond stones. Includes matching earrings. Ideal for functions & events.", material: "1 Gram Gold Covering", finish: "Micro Gold Plating", weight: "55g", occasion: "Functions / Events" },
-  { id: 8, name: "Impon Anklet Pair (Kolusu)", category: "Anklets", price: 399, oldPrice: null, emoji: "🪷", badge: "new", status: "active", desc: "Traditional Impon silver-tone anklets with small bells. Lightweight for daily wear. Pair of 2.", material: "Brass", finish: "Impon Silver Tone", weight: "35g (pair)", occasion: "Daily Wear" },
-  { id: 9, name: "Bridal Vanki (Armlet)", category: "Vanki & Armlets", price: 1299, oldPrice: 1999, emoji: "🛍️", badge: "bridal", status: "active", desc: "Traditional South Indian Vanki armlet with peacock design. Ruby & emerald stones. Essential bridal accessory.", material: "Brass", finish: "Impon Gold", weight: "42g", occasion: "Bridal" },
-  { id: 10, name: "Ear Chain Mattal (South Indian Style)", category: "Ear Chains", price: 599, oldPrice: 1000, emoji: "✨", badge: "sale", status: "active", desc: "Premium South Indian ear chain mattal with white stone & ruby. One gram gold plated. Connects earring to hair clip.", material: "Brass", finish: "Gold Plating", weight: "12g", occasion: "Bridal / Wedding" },
-  { id: 11, name: "Kemp Stone Choker Necklace", category: "Necklace Sets", price: 1599, oldPrice: null, emoji: "📿", badge: "new", status: "active", desc: "Attigai-style close-neck choker with kemp stones and impon base. Traditional temple artistry. Perfect with silk sarees.", material: "Copper & Brass", finish: "Impon", weight: "32g", occasion: "Temple / Festival" },
-  { id: 12, name: "Impon Pendant Dollar Chain", category: "Pendant Chains", price: 1199, oldPrice: 1800, emoji: "💫", badge: "sale", status: "active", desc: "Lakshmi dollar pendant with 30 inch gold plated chain. Traditional Impon finish. Religious & auspicious design.", material: "Brass", finish: "Impon Gold", weight: "28g", occasion: "Daily / Religious" },
+  { id: 1, name: "Impon Addigai Bridal Necklace Set", category: "Necklace Sets", price: 2299, oldPrice: 3999, image: "📿", badge: "bridal", status: "active", desc: "Traditional Impon Addigai necklace with matching earrings. Micro gold plated with ruby & emerald kemp stones. Perfect for weddings & bridal ceremonies.", material: "Copper & Brass", finish: "Micro Gold Plating", weight: "65g", occasion: "Bridal / Wedding" },
+  { id: 2, name: "Temple Haram Long Necklace", category: "Haram & Long Necklaces", price: 1399, oldPrice: 2100, image: "🪬", badge: "sale", status: "active", desc: "Traditional South Indian temple haram with Lakshmi dollar design. Ruby-emerald stone studded. 26 inch length with extension chain.", material: "Panchaloha (5 Metal)", finish: "Impon Gold Plating", weight: "48g", occasion: "Wedding / Festival" },
+  { id: 3, name: "Impon Gold Bangles Set (12 pcs)", category: "Bangles", price: 1149, oldPrice: 4950, image: "💎", badge: "trending", status: "active", desc: "Traditional micro gold plated Impon bangles with American Diamond stones. Set of 12. Festive & traditional wear.", material: "Brass", finish: "Micro Gold Plating", weight: "90g (set)", occasion: "Festival / Daily" },
+  { id: 4, name: "Impon Jhumka Earrings", category: "Earrings", price: 699, oldPrice: 1400, image: "✨", badge: "sale", status: "active", desc: "South Indian Jimiki jhumka design earrings in Impon finish. Ruby stone setting with hanging pearl drops. Screw lock for secure fit.", material: "Brass", finish: "Impon", weight: "18g (pair)", occasion: "Daily / Festival" },
+  { id: 5, name: "Maang Tikka with Pearl Chain", category: "Maang Tikka", price: 549, oldPrice: null, image: "🔮", badge: "new", status: "active", desc: "Traditional Maang Tikka with pearl & kemp stone setting. Gold plated finish. Adjustable chain length. Perfect for bridal & functions.", material: "Brass", finish: "Gold Plating", weight: "22g", occasion: "Bridal / Wedding" },
+  { id: 6, name: "Impon Finger Rings Set (6 pcs)", category: "Rings", price: 499, oldPrice: null, image: "💍", badge: "new", status: "active", desc: "Set of 6 traditional Impon finger rings with various stone settings. Adjustable size. Suitable for daily & festive wear.", material: "Brass", finish: "Impon", weight: "30g (set)", occasion: "Daily / Festival" },
+  { id: 7, name: "Gold Covering Necklace with AD Stones", category: "Necklace Sets", price: 1899, oldPrice: 2800, image: "🌟", badge: "trending", status: "active", desc: "Premium 2 gram gold covering necklace with American Diamond stones. Includes matching earrings. Ideal for functions & events.", material: "1 Gram Gold Covering", finish: "Micro Gold Plating", weight: "55g", occasion: "Functions / Events" },
+  { id: 8, name: "Impon Anklet Pair (Kolusu)", category: "Anklets", price: 399, oldPrice: null, image: "🪷", badge: "new", status: "active", desc: "Traditional Impon silver-tone anklets with small bells. Lightweight for daily wear. Pair of 2.", material: "Brass", finish: "Impon Silver Tone", weight: "35g (pair)", occasion: "Daily Wear" },
+  { id: 9, name: "Bridal Vanki (Armlet)", category: "Vanki & Armlets", price: 1299, oldPrice: 1999, image: "🛍️", badge: "bridal", status: "active", desc: "Traditional South Indian Vanki armlet with peacock design. Ruby & emerald stones. Essential bridal accessory.", material: "Brass", finish: "Impon Gold", weight: "42g", occasion: "Bridal" },
+  { id: 10, name: "Ear Chain Mattal (South Indian Style)", category: "Ear Chains", price: 599, oldPrice: 1000, image: "✨", badge: "sale", status: "active", desc: "Premium South Indian ear chain mattal with white stone & ruby. One gram gold plated. Connects earring to hair clip.", material: "Brass", finish: "Gold Plating", weight: "12g", occasion: "Bridal / Wedding" },
+  { id: 11, name: "Kemp Stone Choker Necklace", category: "Necklace Sets", price: 1599, oldPrice: null, image: "📿", badge: "new", status: "active", desc: "Attigai-style close-neck choker with kemp stones and impon base. Traditional temple artistry. Perfect with silk sarees.", material: "Copper & Brass", finish: "Impon", weight: "32g", occasion: "Temple / Festival" },
+  { id: 12, name: "Impon Pendant Dollar Chain", category: "Pendant Chains", price: 1199, oldPrice: 1800, image: "💫", badge: "sale", status: "active", desc: "Lakshmi dollar pendant with 30 inch gold plated chain. Traditional Impon finish. Religious & auspicious design.", material: "Brass", finish: "Impon Gold", weight: "28g", occasion: "Daily / Religious" },
 ];
 
 const initialCategories: Category[] = [
-  { id: 1, name: "Necklace Sets", emoji: "📿", status: "active" },
-  { id: 2, name: "Haram & Long Necklaces", emoji: "🪬", status: "active" },
-  { id: 3, name: "Bangles", emoji: "💎", status: "active" },
-  { id: 4, name: "Earrings", emoji: "✨", status: "active" },
-  { id: 5, name: "Maang Tikka", emoji: "🔮", status: "active" },
-  { id: 6, name: "Rings", emoji: "💍", status: "active" },
-  { id: 7, name: "Anklets", emoji: "🪷", status: "active" },
-  { id: 8, name: "Vanki & Armlets", emoji: "🛍️", status: "active" },
-  { id: 9, name: "Ear Chains", emoji: "✨", status: "active" },
-  { id: 10, name: "Pendant Chains", emoji: "💫", status: "active" },
+  { id: 1, name: "Necklace Sets", image: "📿", status: "active" },
+  { id: 2, name: "Haram & Long Necklaces", image: "🪬", status: "active" },
+  { id: 3, name: "Bangles", image: "💎", status: "active" },
+  { id: 4, name: "Earrings", image: "✨", status: "active" },
+  { id: 5, name: "Maang Tikka", image: "🔮", status: "active" },
+  { id: 6, name: "Rings", image: "💍", status: "active" },
+  { id: 7, name: "Anklets", image: "🪷", status: "active" },
+  { id: 8, name: "Vanki & Armlets", image: "🛍️", status: "active" },
+  { id: 9, name: "Ear Chains", image: "✨", status: "active" },
+  { id: 10, name: "Pendant Chains", image: "💫", status: "active" },
 ];
 
 export default function Home() {
@@ -85,6 +87,18 @@ export default function Home() {
   const [editingCategory, setEditingCategory] = useState<number | null>(null);
   const [toastMsg, setToastMsg] = useState<{ icon: string; msg: string } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pImageRef = useRef<HTMLInputElement>(null);
+  const cImageRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { showToast("⚠️", "Please select an image file!"); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast("⚠️", "Image must be under 5MB!"); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => { setter(ev.target?.result as string); };
+    reader.readAsDataURL(file);
+  };
 
   // Admin form state
   const [pName, setPName] = useState("");
@@ -94,10 +108,10 @@ export default function Home() {
   const [pDesc, setPDesc] = useState("");
   const [pBadge, setPBadge] = useState("");
   const [pStatus, setPStatus] = useState("active");
-  const [pEmoji, setPEmoji] = useState("");
+  const [pImage, setPImage] = useState("");
   const [cName, setCName] = useState("");
   const [cStatus, setCStatus] = useState("active");
-  const [cEmoji, setCEmoji] = useState("");
+  const [cImage, setCImage] = useState("");
   const [settingsName, setSettingsName] = useState("Shanthi Gold Covering");
   const [settingsCurrency, setSettingsCurrency] = useState("₹");
   const [settingsTagline, setSettingsTagline] = useState("Trusted Impon Jwellery Since 1989");
@@ -199,12 +213,12 @@ export default function Home() {
       showToast("⚠️", "Please fill all required fields!");
       return;
     }
-    const emoji = pEmoji || "💎";
+    const image = pImage || "💎";
     if (editingProduct !== null) {
       setProducts((prev) =>
         prev.map((p) =>
           p.id === editingProduct
-            ? { ...p, name: pName, category: pCategory, price: +pPrice, oldPrice: pPriceOld ? +pPriceOld : null, desc: pDesc, badge: pBadge, status: pStatus, emoji }
+            ? { ...p, name: pName, category: pCategory, price: +pPrice, oldPrice: pPriceOld ? +pPriceOld : null, desc: pDesc, badge: pBadge, status: pStatus, image }
             : p
         )
       );
@@ -212,7 +226,7 @@ export default function Home() {
     } else {
       setProducts((prev) => [
         ...prev,
-        { id: nextId, name: pName, category: pCategory, price: +pPrice, oldPrice: pPriceOld ? +pPriceOld : null, desc: pDesc, badge: pBadge, status: pStatus, emoji, material: "", finish: "", weight: "", occasion: "" },
+        { id: nextId, name: pName, category: pCategory, price: +pPrice, oldPrice: pPriceOld ? +pPriceOld : null, desc: pDesc, badge: pBadge, status: pStatus, image, material: "", finish: "", weight: "", occasion: "" },
       ]);
     }
     clearProductForm();
@@ -220,7 +234,7 @@ export default function Home() {
   };
 
   const clearProductForm = () => {
-    setPName(""); setPCategory(""); setPPrice(""); setPPriceOld(""); setPDesc(""); setPBadge(""); setPStatus("active"); setPEmoji("");
+    setPName(""); setPCategory(""); setPPrice(""); setPPriceOld(""); setPDesc(""); setPBadge(""); setPStatus("active"); setPImage("");
   };
 
   const deleteProduct = (id: number) => {
@@ -235,20 +249,20 @@ export default function Home() {
     const p = products.find((p) => p.id === id);
     if (!p) return;
     setEditingProduct(id);
-    setPName(p.name); setPCategory(p.category); setPPrice(String(p.price)); setPPriceOld(p.oldPrice ? String(p.oldPrice) : ""); setPDesc(p.desc); setPBadge(p.badge); setPStatus(p.status); setPEmoji(p.emoji);
+    setPName(p.name); setPCategory(p.category); setPPrice(String(p.price)); setPPriceOld(p.oldPrice ? String(p.oldPrice) : ""); setPDesc(p.desc); setPBadge(p.badge); setPStatus(p.status); setPImage(p.image);
     setAdminSection("add-product");
   };
 
   const saveCategory = () => {
     if (!cName) { showToast("⚠️", "Please enter a category name!"); return; }
-    const emoji = cEmoji || "💎";
+    const image = cImage || "💎";
     if (editingCategory !== null) {
-      setCategories((prev) => prev.map((c) => (c.id === editingCategory ? { ...c, name: cName, status: cStatus, emoji } : c)));
+      setCategories((prev) => prev.map((c) => (c.id === editingCategory ? { ...c, name: cName, status: cStatus, image } : c)));
       setEditingCategory(null);
     } else {
-      setCategories((prev) => [...prev, { id: nextId, name: cName, status: cStatus, emoji }]);
+      setCategories((prev) => [...prev, { id: nextId, name: cName, status: cStatus, image }]);
     }
-    setCName(""); setCStatus("active"); setCEmoji("");
+    setCName(""); setCStatus("active"); setCImage("");
     showToast("✅", `Category "${cName}" saved!`);
   };
 
@@ -262,7 +276,7 @@ export default function Home() {
   const editCategory = (id: number) => {
     const c = categories.find((c) => c.id === id);
     if (!c) return;
-    setEditingCategory(id); setCName(c.name); setCStatus(c.status); setCEmoji(c.emoji);
+    setEditingCategory(id); setCName(c.name); setCStatus(c.status); setCImage(c.image);
     setAdminSection("add-category");
   };
 
@@ -416,7 +430,7 @@ export default function Home() {
               const n = products.filter((p) => p.category === c.name && p.status === "active").length;
               return (
                 <div key={c.id} className="cat-card" onClick={() => { setActiveFilter(c.name); scrollTo("products"); }}>
-                  <div className="cat-icon">{c.emoji}</div>
+                  <div className="cat-icon">{renderImageOrEmoji(c.image)}</div>
                   <div className="cat-name">{c.name}</div>
                   <div className="cat-count">{n} piece{n !== 1 ? "s" : ""}</div>
                 </div>
@@ -450,7 +464,7 @@ export default function Home() {
               filteredProducts.map((p) => (
                 <div key={p.id} className="product-card" onClick={() => setModalProduct(p)}>
                   <div className="product-img">
-                    <span style={{ position: "relative", zIndex: 1 }}>{p.emoji}</span>
+                    <span style={{ position: "relative", zIndex: 1 }}>{renderImageOrEmoji(p.image)}</span>
                     {p.badge && (
                       <div className={`product-badge badge-${p.badge}`}>
                         {p.badge === "bridal" ? "Bridal" : p.badge === "trending" ? "Trending" : p.badge === "new" ? "New Arrival" : "Sale"}
@@ -646,7 +660,7 @@ export default function Home() {
           ) : (
             cart.map((item) => (
               <div key={item.id} className="cart-item">
-                <div className="cart-item-img">{item.emoji}</div>
+                <div className="cart-item-img">{renderImageOrEmoji(item.image)}</div>
                 <div className="cart-item-info">
                   <div className="cart-item-name">{item.name}</div>
                   <div className="cart-item-cat">{item.category}</div>
@@ -676,7 +690,7 @@ export default function Home() {
       <div className={`modal-overlay ${modalProduct ? "open" : ""}`} onClick={() => setModalProduct(null)}>
         {modalProduct && (
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-img">{modalProduct.emoji}</div>
+            <div className="modal-img">{renderImageOrEmoji(modalProduct.image)}</div>
             <div className="modal-content">
               <div className="modal-category">{modalProduct.category}</div>
               <div className="modal-name">{modalProduct.name}</div>
@@ -780,7 +794,7 @@ export default function Home() {
                       <tbody>
                         {products.map((p) => (
                           <tr key={p.id}>
-                            <td className="td-emoji">{p.emoji}</td>
+                            <td className="td-emoji">{renderImageOrEmoji(p.image, { fontSize: 24 })}</td>
                             <td className="td-name">{p.name}</td>
                             <td>{p.category}</td>
                             <td className="td-price">{currency}{p.price.toLocaleString("en-IN")}</td>
@@ -799,18 +813,25 @@ export default function Home() {
                     <div className="form-section-title">💎 <span>{editingProduct !== null ? "Edit Product" : "Add New Product"}</span></div>
                     <div className="form-grid">
                       <div className="form-group"><label className="form-label">Product Name *</label><input className="form-input" type="text" placeholder="e.g. Impon Addigai Necklace Set" value={pName} onChange={(e) => setPName(e.target.value)} /></div>
-                      <div className="form-group"><label className="form-label">Category *</label><select className="form-input form-select" value={pCategory} onChange={(e) => setPCategory(e.target.value)}><option value="">Select Category</option>{activeCategories.map((c) => <option key={c.id} value={c.name}>{c.emoji} {c.name}</option>)}</select></div>
+                      <div className="form-group"><label className="form-label">Category *</label><select className="form-input form-select" value={pCategory} onChange={(e) => setPCategory(e.target.value)}><option value="">Select Category</option>{activeCategories.map((c) => <option key={c.id} value={c.name}>{c.image} {c.name}</option>)}</select></div>
                       <div className="form-group"><label className="form-label">Price (₹) *</label><input className="form-input" type="number" placeholder="e.g. 2299" min="0" value={pPrice} onChange={(e) => setPPrice(e.target.value)} /></div>
                       <div className="form-group"><label className="form-label">Original Price ₹ (for sale)</label><input className="form-input" type="number" placeholder="e.g. 3500" min="0" value={pPriceOld} onChange={(e) => setPPriceOld(e.target.value)} /></div>
                       <div className="form-group full"><label className="form-label">Description</label><textarea className="form-input form-textarea" placeholder="Describe the jewellery piece..." value={pDesc} onChange={(e) => setPDesc(e.target.value)} /></div>
                       <div className="form-group"><label className="form-label">Badge</label><select className="form-input form-select" value={pBadge} onChange={(e) => setPBadge(e.target.value)}><option value="">None</option><option value="new">New Arrival</option><option value="sale">Sale</option><option value="trending">Trending</option><option value="bridal">Bridal</option></select></div>
                       <div className="form-group"><label className="form-label">Status</label><select className="form-input form-select" value={pStatus} onChange={(e) => setPStatus(e.target.value)}><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
-                      <div className="form-group full"><label className="form-label">Icon / Emoji</label>
-                        <div className="emoji-picker">
-                          {JEWEL_EMOJIS.map((e, i) => (
-                            <div key={i} className={`emoji-option ${pEmoji === e ? "selected" : ""}`} onClick={() => setPEmoji(e)}>{e}</div>
-                          ))}
-                        </div>
+                      <div className="form-group full"><label className="form-label">Product Image</label>
+                        <input ref={pImageRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleImageUpload(e, setPImage)} />
+                        {pImage ? (
+                          <div style={{ position: "relative", width: 160, height: 160, borderRadius: 12, overflow: "hidden", border: "2px solid var(--color-gold3)" }}>
+                            {renderImageOrEmoji(pImage, { borderRadius: 12 })}
+                            <button onClick={() => setPImage("")} style={{ position: "absolute", top: 4, right: 4, width: 28, height: 28, borderRadius: "50%", background: "rgba(0,0,0,0.6)", color: "#fff", border: "none", cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                          </div>
+                        ) : (
+                          <div onClick={() => pImageRef.current?.click()} style={{ width: 160, height: 160, borderRadius: 12, border: "2px dashed var(--color-gold3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", background: "rgba(200,146,42,0.05)", gap: 8 }}>
+                            <span style={{ fontSize: 32 }}>📷</span>
+                            <span style={{ fontSize: 12, color: "var(--color-gray)" }}>Click to upload</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="form-btn-row" style={{ marginTop: 18 }}>
@@ -823,7 +844,7 @@ export default function Home() {
                 {/* Categories List */}
                 <div className={`admin-section ${adminSection === "categories-admin" ? "active" : ""}`}>
                   <div className="admin-table-wrap">
-                    <div className="admin-table-header"><div className="admin-table-title">All Categories</div><button className="btn-add" onClick={() => { setCName(""); setCStatus("active"); setCEmoji(""); setEditingCategory(null); setAdminSection("add-category"); }}>+ Add Category</button></div>
+                    <div className="admin-table-header"><div className="admin-table-title">All Categories</div><button className="btn-add" onClick={() => { setCName(""); setCStatus("active"); setCImage(""); setEditingCategory(null); setAdminSection("add-category"); }}>+ Add Category</button></div>
                     <table>
                       <thead><tr><th>Icon</th><th>Name</th><th>Products</th><th>Status</th><th>Actions</th></tr></thead>
                       <tbody>
@@ -831,7 +852,7 @@ export default function Home() {
                           const n = products.filter((p) => p.category === c.name).length;
                           return (
                             <tr key={c.id}>
-                              <td className="td-emoji">{c.emoji}</td>
+                              <td className="td-emoji">{renderImageOrEmoji(c.image, { fontSize: 24 })}</td>
                               <td className="td-name">{c.name}</td>
                               <td>{n}</td>
                               <td><span className={`td-badge ${c.status}`}>{c.status}</span></td>
@@ -851,12 +872,19 @@ export default function Home() {
                     <div className="form-grid">
                       <div className="form-group"><label className="form-label">Category Name *</label><input className="form-input" type="text" placeholder="e.g. Maang Tikka" value={cName} onChange={(e) => setCName(e.target.value)} /></div>
                       <div className="form-group"><label className="form-label">Status</label><select className="form-input form-select" value={cStatus} onChange={(e) => setCStatus(e.target.value)}><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
-                      <div className="form-group full"><label className="form-label">Icon</label>
-                        <div className="emoji-picker">
-                          {JEWEL_EMOJIS.map((e, i) => (
-                            <div key={i} className={`emoji-option ${cEmoji === e ? "selected" : ""}`} onClick={() => setCEmoji(e)}>{e}</div>
-                          ))}
-                        </div>
+                      <div className="form-group full"><label className="form-label">Category Image</label>
+                        <input ref={cImageRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleImageUpload(e, setCImage)} />
+                        {cImage ? (
+                          <div style={{ position: "relative", width: 120, height: 120, borderRadius: 12, overflow: "hidden", border: "2px solid var(--color-gold3)" }}>
+                            {renderImageOrEmoji(cImage, { borderRadius: 12 })}
+                            <button onClick={() => setCImage("")} style={{ position: "absolute", top: 4, right: 4, width: 28, height: 28, borderRadius: "50%", background: "rgba(0,0,0,0.6)", color: "#fff", border: "none", cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                          </div>
+                        ) : (
+                          <div onClick={() => cImageRef.current?.click()} style={{ width: 120, height: 120, borderRadius: 12, border: "2px dashed var(--color-gold3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", background: "rgba(200,146,42,0.05)", gap: 8 }}>
+                            <span style={{ fontSize: 32 }}>📷</span>
+                            <span style={{ fontSize: 12, color: "var(--color-gray)" }}>Click to upload</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="form-btn-row" style={{ marginTop: 18 }}>
