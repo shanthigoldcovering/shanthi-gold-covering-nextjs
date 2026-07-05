@@ -36,6 +36,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# User data (auto-created on first request)
+/data/
+
+# Uploaded images
+/public/uploads/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

@@ -2,9 +2,24 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
-
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "shanthi123";
+import {
+  fetchProducts,
+  fetchCategories,
+  fetchSettings,
+  createProduct,
+  updateProduct,
+  deleteProduct as deleteProductApi,
+  createCategory,
+  updateCategory,
+  deleteCategory as deleteCategoryApi,
+  updateSettings as updateSettingsApi,
+  login as loginApi,
+  uploadImage,
+  setToken,
+  clearToken,
+  hasToken,
+} from "@/lib/api";
+import type { Product, Category } from "@/lib/types";
 
 type Branch = {
   id: string;
@@ -37,29 +52,6 @@ const BRANCHES: Branch[] = [
   },
 ];
 
-type Product = {
-  id: number;
-  name: string;
-  category: string;
-  price: number;
-  oldPrice: number | null;
-  image: string;
-  badge: string;
-  status: string;
-  desc: string;
-  material: string;
-  finish: string;
-  weight: string;
-  occasion: string;
-};
-
-type Category = {
-  id: number;
-  name: string;
-  image: string;
-  status: string;
-};
-
 function Img({ src, alt, style, sizes }: { src: string; alt: string; style?: React.CSSProperties; sizes?: string }) {
   const isLocal = src.startsWith("/");
   if (isLocal) {
@@ -74,37 +66,9 @@ function Icon({ name, size = 20, alt, style }: { name: string; size?: number; al
 
 type CartItem = Product & { qty: number };
 
-const initialProducts: Product[] = [
-  { id: 1, name: "Impon Addigai Bridal Necklace Set", category: "Necklace Sets", price: 2299, oldPrice: 3999, image: "/images/products/1.svg", badge: "bridal", status: "active", desc: "Traditional Impon Addigai necklace with matching earrings. Micro gold plated with ruby & emerald kemp stones. Perfect for weddings & bridal ceremonies.", material: "Copper & Brass", finish: "Micro Gold Plating", weight: "65g", occasion: "Bridal / Wedding" },
-  { id: 2, name: "Temple Haram Long Necklace", category: "Haram & Long Necklaces", price: 1399, oldPrice: 2100, image: "/images/products/2.svg", badge: "sale", status: "active", desc: "Traditional South Indian temple haram with Lakshmi dollar design. Ruby-emerald stone studded. 26 inch length with extension chain.", material: "Panchaloha (5 Metal)", finish: "Impon Gold Plating", weight: "48g", occasion: "Wedding / Festival" },
-  { id: 3, name: "Impon Gold Bangles Set (12 pcs)", category: "Bangles", price: 1149, oldPrice: 4950, image: "/images/products/3.svg", badge: "trending", status: "active", desc: "Traditional micro gold plated Impon bangles with American Diamond stones. Set of 12. Festive & traditional wear.", material: "Brass", finish: "Micro Gold Plating", weight: "90g (set)", occasion: "Festival / Daily" },
-  { id: 4, name: "Impon Jhumka Earrings", category: "Earrings", price: 699, oldPrice: 1400, image: "/images/products/4.svg", badge: "sale", status: "active", desc: "South Indian Jimiki jhumka design earrings in Impon finish. Ruby stone setting with hanging pearl drops. Screw lock for secure fit.", material: "Brass", finish: "Impon", weight: "18g (pair)", occasion: "Daily / Festival" },
-  { id: 5, name: "Maang Tikka with Pearl Chain", category: "Maang Tikka", price: 549, oldPrice: null, image: "/images/products/5.svg", badge: "new", status: "active", desc: "Traditional Maang Tikka with pearl & kemp stone setting. Gold plated finish. Adjustable chain length. Perfect for bridal & functions.", material: "Brass", finish: "Gold Plating", weight: "22g", occasion: "Bridal / Wedding" },
-  { id: 6, name: "Impon Finger Rings Set (6 pcs)", category: "Rings", price: 499, oldPrice: null, image: "/images/products/6.svg", badge: "new", status: "active", desc: "Set of 6 traditional Impon finger rings with various stone settings. Adjustable size. Suitable for daily & festive wear.", material: "Brass", finish: "Impon", weight: "30g (set)", occasion: "Daily / Festival" },
-  { id: 7, name: "Gold Covering Necklace with AD Stones", category: "Necklace Sets", price: 1899, oldPrice: 2800, image: "/images/products/7.svg", badge: "trending", status: "active", desc: "Premium 2 gram gold covering necklace with American Diamond stones. Includes matching earrings. Ideal for functions & events.", material: "1 Gram Gold Covering", finish: "Micro Gold Plating", weight: "55g", occasion: "Functions / Events" },
-  { id: 8, name: "Impon Anklet Pair (Kolusu)", category: "Anklets", price: 399, oldPrice: null, image: "/images/products/8.svg", badge: "new", status: "active", desc: "Traditional Impon silver-tone anklets with small bells. Lightweight for daily wear. Pair of 2.", material: "Brass", finish: "Impon Silver Tone", weight: "35g (pair)", occasion: "Daily Wear" },
-  { id: 9, name: "Bridal Vanki (Armlet)", category: "Vanki & Armlets", price: 1299, oldPrice: 1999, image: "/images/products/9.svg", badge: "bridal", status: "active", desc: "Traditional South Indian Vanki armlet with peacock design. Ruby & emerald stones. Essential bridal accessory.", material: "Brass", finish: "Impon Gold", weight: "42g", occasion: "Bridal" },
-  { id: 10, name: "Ear Chain Mattal (South Indian Style)", category: "Ear Chains", price: 599, oldPrice: 1000, image: "/images/products/10.svg", badge: "sale", status: "active", desc: "Premium South Indian ear chain mattal with white stone & ruby. One gram gold plated. Connects earring to hair clip.", material: "Brass", finish: "Gold Plating", weight: "12g", occasion: "Bridal / Wedding" },
-  { id: 11, name: "Kemp Stone Choker Necklace", category: "Necklace Sets", price: 1599, oldPrice: null, image: "/images/products/11.svg", badge: "new", status: "active", desc: "Attigai-style close-neck choker with kemp stones and impon base. Traditional temple artistry. Perfect with silk sarees.", material: "Copper & Brass", finish: "Impon", weight: "32g", occasion: "Temple / Festival" },
-  { id: 12, name: "Impon Pendant Dollar Chain", category: "Pendant Chains", price: 1199, oldPrice: 1800, image: "/images/products/12.svg", badge: "sale", status: "active", desc: "Lakshmi dollar pendant with 30 inch gold plated chain. Traditional Impon finish. Religious & auspicious design.", material: "Brass", finish: "Impon Gold", weight: "28g", occasion: "Daily / Religious" },
-];
-
-const initialCategories: Category[] = [
-  { id: 1, name: "Necklace Sets", image: "/images/categories/1.svg", status: "active" },
-  { id: 2, name: "Haram & Long Necklaces", image: "/images/categories/2.svg", status: "active" },
-  { id: 3, name: "Bangles", image: "/images/categories/3.svg", status: "active" },
-  { id: 4, name: "Earrings", image: "/images/categories/4.svg", status: "active" },
-  { id: 5, name: "Maang Tikka", image: "/images/categories/5.svg", status: "active" },
-  { id: 6, name: "Rings", image: "/images/categories/6.svg", status: "active" },
-  { id: 7, name: "Anklets", image: "/images/categories/7.svg", status: "active" },
-  { id: 8, name: "Vanki & Armlets", image: "/images/categories/8.svg", status: "active" },
-  { id: 9, name: "Ear Chains", image: "/images/categories/9.svg", status: "active" },
-  { id: 10, name: "Pendant Chains", image: "/images/categories/10.svg", status: "active" },
-];
-
 export default function Home() {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -129,14 +93,15 @@ export default function Home() {
 
   const getBranch = (id: string) => BRANCHES.find((b) => b.id === id) || BRANCHES[0];
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) { showToast("Warning", "Please select an image file!"); return; }
+    if (!file.type.startsWith("image/")) { showToast("Warning", "Please select an image!"); return; }
     if (file.size > 5 * 1024 * 1024) { showToast("Warning", "Image must be under 5MB!"); return; }
-    const reader = new FileReader();
-    reader.onload = (ev) => { setter(ev.target?.result as string); };
-    reader.readAsDataURL(file);
+    try {
+      const { url } = await uploadImage(file);
+      setter(url);
+    } catch { showToast("Warning", "Image upload failed!"); }
   };
 
   // Admin form state
@@ -175,21 +140,41 @@ export default function Home() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Load data from API on mount
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [prods, cats, settings] = await Promise.all([
+          fetchProducts(), fetchCategories(), fetchSettings()
+        ]);
+        setProducts(prods);
+        setCategories(cats);
+        setSettingsName(settings.storeName);
+        setSettingsCurrency(settings.currency);
+        setSettingsTagline(settings.tagline);
+        setSettingsPhone(settings.phone);
+        setSettingsAddress(settings.address);
+      } catch (e) { console.warn("API unavailable", e); }
+    };
+    load();
+  }, []);
+
   // Check persisted admin session
   useEffect(() => {
-    if (typeof window !== "undefined" && sessionStorage.getItem("sgc_admin") === "1") {
+    if (typeof window !== "undefined" && hasToken()) {
       setAdminAuth(true);
     }
   }, []);
 
-  const handleLogin = () => {
-    if (loginUser === ADMIN_USER && loginPass === ADMIN_PASS) {
-      setAdminAuth(true);
+  const handleLogin = async () => {
+    try {
+      await loginApi(loginUser, loginPass);
       sessionStorage.setItem("sgc_admin", "1");
+      setAdminAuth(true);
       setLoginError("");
       setLoginUser("");
       setLoginPass("");
-    } else {
+    } catch {
       setLoginError("Invalid username or password");
       setLoginShake(true);
       setTimeout(() => setLoginShake(false), 500);
@@ -198,6 +183,7 @@ export default function Home() {
 
   const handleLogout = () => {
     setAdminAuth(false);
+    clearToken();
     sessionStorage.removeItem("sgc_admin");
     setAdminSection("dashboard");
   };
@@ -251,43 +237,43 @@ export default function Home() {
   const activeProductCount = products.filter((p) => p.status === "active").length;
 
   // Admin actions
-  const nextId = Math.max(...products.map((p) => p.id), ...categories.map((c) => c.id)) + 1;
-
-  const saveProduct = () => {
+  const saveProduct = async () => {
     if (!pName || !pCategory || !pPrice) {
       showToast("Warning", "Please fill all required fields!");
       return;
     }
     const image = pImage || "/images/products/1.svg";
-    if (editingProduct !== null) {
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === editingProduct
-            ? { ...p, name: pName, category: pCategory, price: +pPrice, oldPrice: pPriceOld ? +pPriceOld : null, desc: pDesc, badge: pBadge, status: pStatus, image }
-            : p
-        )
-      );
-      setEditingProduct(null);
-    } else {
-      setProducts((prev) => [
-        ...prev,
-        { id: nextId, name: pName, category: pCategory, price: +pPrice, oldPrice: pPriceOld ? +pPriceOld : null, desc: pDesc, badge: pBadge, status: pStatus, image, material: "", finish: "", weight: "", occasion: "" },
-      ]);
+    try {
+      if (editingProduct !== null) {
+        const updated = await updateProduct(editingProduct, { name: pName, category: pCategory, price: +pPrice, oldPrice: pPriceOld ? +pPriceOld : null, desc: pDesc, badge: pBadge, status: pStatus, image });
+        setProducts((prev) => prev.map((p) => (p.id === editingProduct ? updated : p)));
+        setEditingProduct(null);
+      } else {
+        const created = await createProduct({ name: pName, category: pCategory, price: +pPrice, oldPrice: pPriceOld ? +pPriceOld : null, desc: pDesc, badge: pBadge, status: pStatus, image, material: "", finish: "", weight: "", occasion: "" });
+        setProducts((prev) => [...prev, created]);
+      }
+      clearProductForm();
+      showToast("Done", `Product "${pName}" saved!`);
+    } catch (e: any) {
+      showToast("Warning", e.message || "Failed to save product");
     }
-    clearProductForm();
-    showToast("Done", `Product "${pName}" saved!`);
   };
 
   const clearProductForm = () => {
     setPName(""); setPCategory(""); setPPrice(""); setPPriceOld(""); setPDesc(""); setPBadge(""); setPStatus("active"); setPImage("");
   };
 
-  const deleteProduct = (id: number) => {
+  const deleteProduct = async (id: number) => {
     const p = products.find((p) => p.id === id);
     if (!p || !confirm(`Delete "${p.name}"?`)) return;
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-    setCart((prev) => prev.filter((i) => i.id !== id));
-    showToast("Delete", "Product deleted.");
+    try {
+      await deleteProductApi(id);
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+      setCart((prev) => prev.filter((i) => i.id !== id));
+      showToast("Delete", "Product deleted.");
+    } catch (e: any) {
+      showToast("Warning", e.message || "Delete failed");
+    }
   };
 
   const editProduct = (id: number) => {
@@ -298,24 +284,35 @@ export default function Home() {
     setAdminSection("add-product");
   };
 
-  const saveCategory = () => {
+  const saveCategory = async () => {
     if (!cName) { showToast("Warning", "Please enter a category name!"); return; }
     const image = cImage || "/images/categories/1.svg";
-    if (editingCategory !== null) {
-      setCategories((prev) => prev.map((c) => (c.id === editingCategory ? { ...c, name: cName, status: cStatus, image } : c)));
-      setEditingCategory(null);
-    } else {
-      setCategories((prev) => [...prev, { id: nextId, name: cName, status: cStatus, image }]);
+    try {
+      if (editingCategory !== null) {
+        const updated = await updateCategory(editingCategory, { name: cName, status: cStatus, image });
+        setCategories((prev) => prev.map((c) => (c.id === editingCategory ? updated : c)));
+        setEditingCategory(null);
+      } else {
+        const created = await createCategory({ name: cName, status: cStatus, image });
+        setCategories((prev) => [...prev, created]);
+      }
+      setCName(""); setCStatus("active"); setCImage("");
+      showToast("Done", `Category "${cName}" saved!`);
+    } catch (e: any) {
+      showToast("Warning", e.message || "Failed to save category");
     }
-    setCName(""); setCStatus("active"); setCImage("");
-    showToast("Done", `Category "${cName}" saved!`);
   };
 
-  const deleteCategory = (id: number) => {
+  const deleteCategory = async (id: number) => {
     const c = categories.find((c) => c.id === id);
     if (!c || !confirm(`Delete category "${c.name}"?`)) return;
-    setCategories((prev) => prev.filter((c) => c.id !== id));
-    showToast("Delete", "Category deleted.");
+    try {
+      await deleteCategoryApi(id);
+      setCategories((prev) => prev.filter((c) => c.id !== id));
+      showToast("Delete", "Category deleted.");
+    } catch (e: any) {
+      showToast("Warning", e.message || "Delete failed");
+    }
   };
 
   const editCategory = (id: number) => {
@@ -325,8 +322,19 @@ export default function Home() {
     setAdminSection("add-category");
   };
 
-  const saveSettings = () => {
-    showToast("Done", "Settings saved!");
+  const saveSettings = async () => {
+    try {
+      await updateSettingsApi({
+        storeName: settingsName,
+        currency: settingsCurrency,
+        tagline: settingsTagline,
+        phone: settingsPhone,
+        address: settingsAddress,
+      });
+      showToast("Done", "Settings saved!");
+    } catch (e: any) {
+      showToast("Warning", e.message || "Failed to save settings");
+    }
   };
 
   const adminTitles: Record<string, string> = {
