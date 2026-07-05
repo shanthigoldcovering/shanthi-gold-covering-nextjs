@@ -52,7 +52,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${cormorant.variable} ${nunito.variable}`}>
-      <body className={nunito.className}>
+      <body className={nunito.className} suppressHydrationWarning>
         <PageLoader />
         {children}
       </body>
