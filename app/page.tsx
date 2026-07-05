@@ -29,42 +29,46 @@ type Category = {
   status: string;
 };
 
-function renderImageOrEmoji(value: string, style?: React.CSSProperties) {
-  const isImage = value.startsWith("data:") || value.startsWith("http");
-  if (isImage) {
-    return <img src={value} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 8, ...style }} />;
+function Img({ src, alt, style, sizes }: { src: string; alt: string; style?: React.CSSProperties; sizes?: string }) {
+  const isLocal = src.startsWith("/");
+  if (isLocal) {
+    return <Image src={src} alt={alt} fill style={{ objectFit: "cover", ...style }} sizes={sizes || "100vw"} />;
   }
-  return <span style={{ fontSize: "inherit", ...style }}>{value}</span>;
+  return <img src={src} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover", ...style }} />;
+}
+
+function Icon({ name, size = 20, alt }: { name: string; size?: number; alt?: string }) {
+  return <Image src={`/images/ui/${name}.svg`} alt={alt || name} width={size} height={size} style={{ display: "inline-block", verticalAlign: "middle" }} />;
 }
 
 type CartItem = Product & { qty: number };
 
 const initialProducts: Product[] = [
-  { id: 1, name: "Impon Addigai Bridal Necklace Set", category: "Necklace Sets", price: 2299, oldPrice: 3999, image: "📿", badge: "bridal", status: "active", desc: "Traditional Impon Addigai necklace with matching earrings. Micro gold plated with ruby & emerald kemp stones. Perfect for weddings & bridal ceremonies.", material: "Copper & Brass", finish: "Micro Gold Plating", weight: "65g", occasion: "Bridal / Wedding" },
-  { id: 2, name: "Temple Haram Long Necklace", category: "Haram & Long Necklaces", price: 1399, oldPrice: 2100, image: "🪬", badge: "sale", status: "active", desc: "Traditional South Indian temple haram with Lakshmi dollar design. Ruby-emerald stone studded. 26 inch length with extension chain.", material: "Panchaloha (5 Metal)", finish: "Impon Gold Plating", weight: "48g", occasion: "Wedding / Festival" },
-  { id: 3, name: "Impon Gold Bangles Set (12 pcs)", category: "Bangles", price: 1149, oldPrice: 4950, image: "💎", badge: "trending", status: "active", desc: "Traditional micro gold plated Impon bangles with American Diamond stones. Set of 12. Festive & traditional wear.", material: "Brass", finish: "Micro Gold Plating", weight: "90g (set)", occasion: "Festival / Daily" },
-  { id: 4, name: "Impon Jhumka Earrings", category: "Earrings", price: 699, oldPrice: 1400, image: "✨", badge: "sale", status: "active", desc: "South Indian Jimiki jhumka design earrings in Impon finish. Ruby stone setting with hanging pearl drops. Screw lock for secure fit.", material: "Brass", finish: "Impon", weight: "18g (pair)", occasion: "Daily / Festival" },
-  { id: 5, name: "Maang Tikka with Pearl Chain", category: "Maang Tikka", price: 549, oldPrice: null, image: "🔮", badge: "new", status: "active", desc: "Traditional Maang Tikka with pearl & kemp stone setting. Gold plated finish. Adjustable chain length. Perfect for bridal & functions.", material: "Brass", finish: "Gold Plating", weight: "22g", occasion: "Bridal / Wedding" },
-  { id: 6, name: "Impon Finger Rings Set (6 pcs)", category: "Rings", price: 499, oldPrice: null, image: "💍", badge: "new", status: "active", desc: "Set of 6 traditional Impon finger rings with various stone settings. Adjustable size. Suitable for daily & festive wear.", material: "Brass", finish: "Impon", weight: "30g (set)", occasion: "Daily / Festival" },
-  { id: 7, name: "Gold Covering Necklace with AD Stones", category: "Necklace Sets", price: 1899, oldPrice: 2800, image: "🌟", badge: "trending", status: "active", desc: "Premium 2 gram gold covering necklace with American Diamond stones. Includes matching earrings. Ideal for functions & events.", material: "1 Gram Gold Covering", finish: "Micro Gold Plating", weight: "55g", occasion: "Functions / Events" },
-  { id: 8, name: "Impon Anklet Pair (Kolusu)", category: "Anklets", price: 399, oldPrice: null, image: "🪷", badge: "new", status: "active", desc: "Traditional Impon silver-tone anklets with small bells. Lightweight for daily wear. Pair of 2.", material: "Brass", finish: "Impon Silver Tone", weight: "35g (pair)", occasion: "Daily Wear" },
-  { id: 9, name: "Bridal Vanki (Armlet)", category: "Vanki & Armlets", price: 1299, oldPrice: 1999, image: "🛍️", badge: "bridal", status: "active", desc: "Traditional South Indian Vanki armlet with peacock design. Ruby & emerald stones. Essential bridal accessory.", material: "Brass", finish: "Impon Gold", weight: "42g", occasion: "Bridal" },
-  { id: 10, name: "Ear Chain Mattal (South Indian Style)", category: "Ear Chains", price: 599, oldPrice: 1000, image: "✨", badge: "sale", status: "active", desc: "Premium South Indian ear chain mattal with white stone & ruby. One gram gold plated. Connects earring to hair clip.", material: "Brass", finish: "Gold Plating", weight: "12g", occasion: "Bridal / Wedding" },
-  { id: 11, name: "Kemp Stone Choker Necklace", category: "Necklace Sets", price: 1599, oldPrice: null, image: "📿", badge: "new", status: "active", desc: "Attigai-style close-neck choker with kemp stones and impon base. Traditional temple artistry. Perfect with silk sarees.", material: "Copper & Brass", finish: "Impon", weight: "32g", occasion: "Temple / Festival" },
-  { id: 12, name: "Impon Pendant Dollar Chain", category: "Pendant Chains", price: 1199, oldPrice: 1800, image: "💫", badge: "sale", status: "active", desc: "Lakshmi dollar pendant with 30 inch gold plated chain. Traditional Impon finish. Religious & auspicious design.", material: "Brass", finish: "Impon Gold", weight: "28g", occasion: "Daily / Religious" },
+  { id: 1, name: "Impon Addigai Bridal Necklace Set", category: "Necklace Sets", price: 2299, oldPrice: 3999, image: "/images/products/1.svg", badge: "bridal", status: "active", desc: "Traditional Impon Addigai necklace with matching earrings. Micro gold plated with ruby & emerald kemp stones. Perfect for weddings & bridal ceremonies.", material: "Copper & Brass", finish: "Micro Gold Plating", weight: "65g", occasion: "Bridal / Wedding" },
+  { id: 2, name: "Temple Haram Long Necklace", category: "Haram & Long Necklaces", price: 1399, oldPrice: 2100, image: "/images/products/2.svg", badge: "sale", status: "active", desc: "Traditional South Indian temple haram with Lakshmi dollar design. Ruby-emerald stone studded. 26 inch length with extension chain.", material: "Panchaloha (5 Metal)", finish: "Impon Gold Plating", weight: "48g", occasion: "Wedding / Festival" },
+  { id: 3, name: "Impon Gold Bangles Set (12 pcs)", category: "Bangles", price: 1149, oldPrice: 4950, image: "/images/products/3.svg", badge: "trending", status: "active", desc: "Traditional micro gold plated Impon bangles with American Diamond stones. Set of 12. Festive & traditional wear.", material: "Brass", finish: "Micro Gold Plating", weight: "90g (set)", occasion: "Festival / Daily" },
+  { id: 4, name: "Impon Jhumka Earrings", category: "Earrings", price: 699, oldPrice: 1400, image: "/images/products/4.svg", badge: "sale", status: "active", desc: "South Indian Jimiki jhumka design earrings in Impon finish. Ruby stone setting with hanging pearl drops. Screw lock for secure fit.", material: "Brass", finish: "Impon", weight: "18g (pair)", occasion: "Daily / Festival" },
+  { id: 5, name: "Maang Tikka with Pearl Chain", category: "Maang Tikka", price: 549, oldPrice: null, image: "/images/products/5.svg", badge: "new", status: "active", desc: "Traditional Maang Tikka with pearl & kemp stone setting. Gold plated finish. Adjustable chain length. Perfect for bridal & functions.", material: "Brass", finish: "Gold Plating", weight: "22g", occasion: "Bridal / Wedding" },
+  { id: 6, name: "Impon Finger Rings Set (6 pcs)", category: "Rings", price: 499, oldPrice: null, image: "/images/products/6.svg", badge: "new", status: "active", desc: "Set of 6 traditional Impon finger rings with various stone settings. Adjustable size. Suitable for daily & festive wear.", material: "Brass", finish: "Impon", weight: "30g (set)", occasion: "Daily / Festival" },
+  { id: 7, name: "Gold Covering Necklace with AD Stones", category: "Necklace Sets", price: 1899, oldPrice: 2800, image: "/images/products/7.svg", badge: "trending", status: "active", desc: "Premium 2 gram gold covering necklace with American Diamond stones. Includes matching earrings. Ideal for functions & events.", material: "1 Gram Gold Covering", finish: "Micro Gold Plating", weight: "55g", occasion: "Functions / Events" },
+  { id: 8, name: "Impon Anklet Pair (Kolusu)", category: "Anklets", price: 399, oldPrice: null, image: "/images/products/8.svg", badge: "new", status: "active", desc: "Traditional Impon silver-tone anklets with small bells. Lightweight for daily wear. Pair of 2.", material: "Brass", finish: "Impon Silver Tone", weight: "35g (pair)", occasion: "Daily Wear" },
+  { id: 9, name: "Bridal Vanki (Armlet)", category: "Vanki & Armlets", price: 1299, oldPrice: 1999, image: "/images/products/9.svg", badge: "bridal", status: "active", desc: "Traditional South Indian Vanki armlet with peacock design. Ruby & emerald stones. Essential bridal accessory.", material: "Brass", finish: "Impon Gold", weight: "42g", occasion: "Bridal" },
+  { id: 10, name: "Ear Chain Mattal (South Indian Style)", category: "Ear Chains", price: 599, oldPrice: 1000, image: "/images/products/10.svg", badge: "sale", status: "active", desc: "Premium South Indian ear chain mattal with white stone & ruby. One gram gold plated. Connects earring to hair clip.", material: "Brass", finish: "Gold Plating", weight: "12g", occasion: "Bridal / Wedding" },
+  { id: 11, name: "Kemp Stone Choker Necklace", category: "Necklace Sets", price: 1599, oldPrice: null, image: "/images/products/11.svg", badge: "new", status: "active", desc: "Attigai-style close-neck choker with kemp stones and impon base. Traditional temple artistry. Perfect with silk sarees.", material: "Copper & Brass", finish: "Impon", weight: "32g", occasion: "Temple / Festival" },
+  { id: 12, name: "Impon Pendant Dollar Chain", category: "Pendant Chains", price: 1199, oldPrice: 1800, image: "/images/products/12.svg", badge: "sale", status: "active", desc: "Lakshmi dollar pendant with 30 inch gold plated chain. Traditional Impon finish. Religious & auspicious design.", material: "Brass", finish: "Impon Gold", weight: "28g", occasion: "Daily / Religious" },
 ];
 
 const initialCategories: Category[] = [
-  { id: 1, name: "Necklace Sets", image: "📿", status: "active" },
-  { id: 2, name: "Haram & Long Necklaces", image: "🪬", status: "active" },
-  { id: 3, name: "Bangles", image: "💎", status: "active" },
-  { id: 4, name: "Earrings", image: "✨", status: "active" },
-  { id: 5, name: "Maang Tikka", image: "🔮", status: "active" },
-  { id: 6, name: "Rings", image: "💍", status: "active" },
-  { id: 7, name: "Anklets", image: "🪷", status: "active" },
-  { id: 8, name: "Vanki & Armlets", image: "🛍️", status: "active" },
-  { id: 9, name: "Ear Chains", image: "✨", status: "active" },
-  { id: 10, name: "Pendant Chains", image: "💫", status: "active" },
+  { id: 1, name: "Necklace Sets", image: "/images/categories/1.svg", status: "active" },
+  { id: 2, name: "Haram & Long Necklaces", image: "/images/categories/2.svg", status: "active" },
+  { id: 3, name: "Bangles", image: "/images/categories/3.svg", status: "active" },
+  { id: 4, name: "Earrings", image: "/images/categories/4.svg", status: "active" },
+  { id: 5, name: "Maang Tikka", image: "/images/categories/5.svg", status: "active" },
+  { id: 6, name: "Rings", image: "/images/categories/6.svg", status: "active" },
+  { id: 7, name: "Anklets", image: "/images/categories/7.svg", status: "active" },
+  { id: 8, name: "Vanki & Armlets", image: "/images/categories/8.svg", status: "active" },
+  { id: 9, name: "Ear Chains", image: "/images/categories/9.svg", status: "active" },
+  { id: 10, name: "Pendant Chains", image: "/images/categories/10.svg", status: "active" },
 ];
 
 export default function Home() {
@@ -86,6 +90,7 @@ export default function Home() {
   const [editingProduct, setEditingProduct] = useState<number | null>(null);
   const [editingCategory, setEditingCategory] = useState<number | null>(null);
   const [toastMsg, setToastMsg] = useState<{ icon: string; msg: string } | null>(null);
+  const toastIconMap: Record<string, string> = { Warning: "cancel", Done: "save", Cart: "cart", Delete: "trash", Heart: "heart", Mail: "mail" };
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pImageRef = useRef<HTMLInputElement>(null);
   const cImageRef = useRef<HTMLInputElement>(null);
@@ -93,8 +98,8 @@ export default function Home() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) { showToast("⚠️", "Please select an image file!"); return; }
-    if (file.size > 5 * 1024 * 1024) { showToast("⚠️", "Image must be under 5MB!"); return; }
+    if (!file.type.startsWith("image/")) { showToast("Warning", "Please select an image file!"); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast("Warning", "Image must be under 5MB!"); return; }
     const reader = new FileReader();
     reader.onload = (ev) => { setter(ev.target?.result as string); };
     reader.readAsDataURL(file);
@@ -115,8 +120,14 @@ export default function Home() {
   const [settingsName, setSettingsName] = useState("Shanthi Gold Covering");
   const [settingsCurrency, setSettingsCurrency] = useState("₹");
   const [settingsTagline, setSettingsTagline] = useState("Trusted Impon Jwellery Since 1989");
-  const [settingsPhone, setSettingsPhone] = useState("+91 98XXX XXXXX");
+  const [settingsPhone, setSettingsPhone] = useState("+91 9600325709");
   const [settingsAddress, setSettingsAddress] = useState("Coimbatore, Tamil Nadu");
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState<{ role: "user" | "bot"; text: string }[]>([
+    { role: "bot", text: "Namaste! Welcome to Shanthi Gold Covering. I'm your virtual jewellery assistant. How can I help you today?" },
+  ]);
+  const [chatTyping, setChatTyping] = useState(false);
 
   const currency = settingsCurrency;
 
@@ -167,7 +178,7 @@ export default function Home() {
         if (ex) return prev.map((i) => (i.id === id ? { ...i, qty: i.qty + 1 } : i));
         return [...prev, { ...p, qty: 1 }];
       });
-      showToast("🛒", `${p.name} added to cart!`);
+      showToast("Cart", `${p.name} added to cart!`);
     },
     [products, showToast]
   );
@@ -210,10 +221,10 @@ export default function Home() {
 
   const saveProduct = () => {
     if (!pName || !pCategory || !pPrice) {
-      showToast("⚠️", "Please fill all required fields!");
+      showToast("Warning", "Please fill all required fields!");
       return;
     }
-    const image = pImage || "💎";
+    const image = pImage || "/images/products/1.svg";
     if (editingProduct !== null) {
       setProducts((prev) =>
         prev.map((p) =>
@@ -230,7 +241,7 @@ export default function Home() {
       ]);
     }
     clearProductForm();
-    showToast("✅", `Product "${pName}" saved!`);
+    showToast("Done", `Product "${pName}" saved!`);
   };
 
   const clearProductForm = () => {
@@ -242,7 +253,7 @@ export default function Home() {
     if (!p || !confirm(`Delete "${p.name}"?`)) return;
     setProducts((prev) => prev.filter((p) => p.id !== id));
     setCart((prev) => prev.filter((i) => i.id !== id));
-    showToast("🗑️", "Product deleted.");
+    showToast("Delete", "Product deleted.");
   };
 
   const editProduct = (id: number) => {
@@ -254,8 +265,8 @@ export default function Home() {
   };
 
   const saveCategory = () => {
-    if (!cName) { showToast("⚠️", "Please enter a category name!"); return; }
-    const image = cImage || "💎";
+    if (!cName) { showToast("Warning", "Please enter a category name!"); return; }
+    const image = cImage || "/images/categories/1.svg";
     if (editingCategory !== null) {
       setCategories((prev) => prev.map((c) => (c.id === editingCategory ? { ...c, name: cName, status: cStatus, image } : c)));
       setEditingCategory(null);
@@ -263,14 +274,14 @@ export default function Home() {
       setCategories((prev) => [...prev, { id: nextId, name: cName, status: cStatus, image }]);
     }
     setCName(""); setCStatus("active"); setCImage("");
-    showToast("✅", `Category "${cName}" saved!`);
+    showToast("Done", `Category "${cName}" saved!`);
   };
 
   const deleteCategory = (id: number) => {
     const c = categories.find((c) => c.id === id);
     if (!c || !confirm(`Delete category "${c.name}"?`)) return;
     setCategories((prev) => prev.filter((c) => c.id !== id));
-    showToast("🗑️", "Category deleted.");
+    showToast("Delete", "Category deleted.");
   };
 
   const editCategory = (id: number) => {
@@ -281,7 +292,7 @@ export default function Home() {
   };
 
   const saveSettings = () => {
-    showToast("✅", "Settings saved!");
+    showToast("Done", "Settings saved!");
   };
 
   const adminTitles: Record<string, string> = {
@@ -289,6 +300,51 @@ export default function Home() {
     "categories-admin": "Categories", "add-category": "Add Category", designs: "Latest Designs",
     orders: "Orders", settings: "Settings",
   };
+
+  const botReply = useCallback((input: string) => {
+    const q = input.toLowerCase().trim();
+    const catNames = categories.map((c) => c.name.toLowerCase());
+    const priceRange = products.length ? `₹${Math.min(...products.map((p) => p.price)).toLocaleString("en-IN")} to ₹${Math.max(...products.map((p) => p.price)).toLocaleString("en-IN")}` : "varies";
+
+    if (q.match(/\b(hi|hello|hey|namaste|vanakkam)\b/)) return "Namaste! Welcome to Shanthi Gold Covering. We specialise in traditional Impon and gold covering jewellery. What are you looking for?";
+    if (q.match(/\b(who|about|story|history)\b/)) return "Shanthi Gold Covering has been crafting authentic Impon jewellery since 1989. With over 35 years of experience, we serve 50,000+ happy families across Tamil Nadu.";
+    if (q.match(/\b(price|cost|rate|budget|afford)\b/)) return `Our collection ranges from ${priceRange}. We have options for every budget — from daily wear to bridal sets.`;
+    if (q.match(/\b(bride|bridal|wedding|结婚)\b/)) return "Our Bridal collection includes complete Impon sets — Haram, Necklace, Bangles, Earrings, Maang Tikka, Vanki & more. Prices start from ₹1,299. Shall I help you find something specific?";
+    if (q.match(/\b(necklace|haram|chain)\b/)) return "We have a wide range of necklaces — from ₹599 pendant chains to ₹2,299 bridal necklace sets. Popular picks: Impon Addigai Bridal Set and Temple Haram. Want to see details?";
+    if (q.match(/\b(bangle|bangles|bracelet)\b/)) return "Our Impon Gold Bangles Set (12 pcs) at ₹1,149 is a bestseller! Micro gold plated with American Diamond stones. Perfect for festive & traditional wear.";
+    if (q.match(/\b(earring|ear|jhumka|jimiki)\b/)) return "We have Impon Jhumka Earrings starting at ₹699 with ruby stone setting and pearl drops. Also check our Ear Chain Mattal at ₹599!";
+    if (q.match(/\b(ring|finger)\b/)) return "Our Impon Finger Rings Set (6 pcs) is available at ₹499 — adjustable sizes with various stone settings. Great for daily & festive wear.";
+    if (q.match(/\b(tikka|maang|mang)\b/)) return "Our Maang Tikka with Pearl Chain is priced at ₹549. It features pearl & kemp stone setting with gold plated finish. Adjustable chain length.";
+    if (q.match(/\b(anklet|kolusu|leg)\b/)) return "Our Impon Anklet Pair (Kolusu) at ₹399 is a great pick — silver-tone with small bells, lightweight for daily wear.";
+    if (q.match(/\b(vanki|armlet|arm)\b/)) return "The Bridal Vanki (Armlet) at ₹1,299 features a peacock design with ruby & emerald stones — an essential bridal accessory.";
+    if (q.match(/\b(choker|kemp)\b/)) return "Our Kemp Stone Choker Necklace at ₹1,599 is an Attigai-style close-neck piece with kemp stones and impon base. Perfect with silk sarees.";
+    if (q.match(/\b(deliver|shipping|ship|courier)\b/)) return "We offer FREE shipping on orders above ₹1,999! COD is available. Orders are typically delivered within 3-5 business days across Tamil Nadu.";
+    if (q.match(/\b(return|refund|exchange)\b/)) return "We have a 7-day hassle-free return policy. If you're not satisfied, you can return or exchange within 7 days of delivery.";
+    if (q.match(/\b(pay|payment|cod|upi|card)\b/)) return "We accept UPI, cards, net banking, and Cash on Delivery (COD). All transactions are secure.";
+    if (q.match(/\b(material|quality|impon|gold|plating|brass)\b/)) return "All our pieces use genuine Panchaloha (5-metal) alloy with micro gold plating for lasting quality. Materials include Brass, Copper, and 1 Gram Gold Covering.";
+    if (q.match(/\b(contact|call|phone|whatsapp|reach)\b/)) return `You can reach us at +91 9600325709 (Call/WhatsApp). We're available Mon-Sat, 9am to 8pm IST. Coimbatore, Tamil Nadu.`;
+    if (q.match(/\b(festival|pongal|diwali|navratri)\b/)) return "Check our Festival Season collection! Temple & Festive Jewellery with kemp stone, ruby & emerald designs — perfect for Pongal, Diwali & Navratri.";
+    if (q.match(/\b(pendant|dollar)\b/)) return "Our Impon Pendant Dollar Chain at ₹1,199 features a Lakshmi dollar pendant with 30 inch gold plated chain. Religious & auspicious design.";
+    if (q.match(/\b(ear.?chain|mattal)\b/)) return "The Ear Chain Mattal (South Indian Style) at ₹599 connects earring to hair clip. White stone & ruby with one gram gold plating.";
+    if (q.match(/\b(offer|discount|sale|deal)\b/)) return "We currently have items on sale with up to 40% off! Check our Products section for items marked 'Sale'. Free shipping on orders above ₹1,999.";
+    if (q.match(/\b(shop|buy|order|cart|checkout)\b/)) return "Browse our collection above, add items to your cart, and proceed to checkout. You can also order via WhatsApp at +91 9600325709.";
+    if (q.match(/\b(thank|thanks|ok|bye|goodbye)\b/)) return "Thank you for visiting Shanthi Gold Covering! If you have more questions, feel free to ask. You can also WhatsApp us at +91 9600325709. Have a wonderful day!";
+    if (q.match(/\b(help|support)\b/)) return "I can help with: product info, prices, categories, shipping, returns, payment, and store details. Just ask me anything about our jewellery!";
+    return `Thanks for your message! For detailed assistance, you can:\n\n• WhatsApp us: +91 9600325709\n• Call us: +91 9600325709\n• Browse our products above\n\nOr ask me about our products, prices, shipping, returns, or any specific jewellery piece!`;
+  }, [categories, products]);
+
+  const sendChat = useCallback(() => {
+    const text = chatInput.trim();
+    if (!text) return;
+    setChatMessages((prev) => [...prev, { role: "user", text }]);
+    setChatInput("");
+    setChatTyping(true);
+    setTimeout(() => {
+      const reply = botReply(text);
+      setChatMessages((prev) => [...prev, { role: "bot", text: reply }]);
+      setChatTyping(false);
+    }, 600 + Math.random() * 800);
+  }, [chatInput, botReply]);
 
   return (
     <>
@@ -319,10 +375,10 @@ export default function Home() {
             <a href="#" onClick={(e) => { e.preventDefault(); scrollTo("testimonials"); }}>Reviews</a>
           </nav>
           <div className="header-actions">
-            <button className="icon-btn" title="Search" onClick={() => { scrollTo("products"); setTimeout(() => document.getElementById("search-input")?.focus(), 400); }}>🔍</button>
-            <button className="icon-btn" title="Admin" onClick={() => setAdminOpen(true)}>⚙️</button>
+            <button className="icon-btn" title="Search" onClick={() => { scrollTo("products"); setTimeout(() => document.getElementById("search-input")?.focus(), 400); }}><Icon name="search" /></button>
+            <button className="icon-btn" title="Admin" onClick={() => setAdminOpen(true)}><Icon name="settings" /></button>
             <button className="icon-btn" onClick={() => setCartOpen(true)}>
-              🛒
+              <Icon name="cart" />
               {cartTotal > 0 && <span className="cart-count">{cartTotal}</span>}
             </button>
             <div className="hamburger" onClick={() => setMobileNavOpen(!mobileNavOpen)}>
@@ -343,12 +399,12 @@ export default function Home() {
           <div className="mobile-nav-close" onClick={() => setMobileNavOpen(false)}>✕</div>
         </div>
         <div className="mobile-nav-links">
-          <a href="#" onClick={(e) => { e.preventDefault(); scrollTo("products"); setMobileNavOpen(false); }}><span className="nav-icon">💎</span>Collections</a>
-          <a href="#" onClick={(e) => { e.preventDefault(); scrollTo("categories"); setMobileNavOpen(false); }}><span className="nav-icon">📿</span>Categories</a>
-          <a href="#" onClick={(e) => { e.preventDefault(); scrollTo("collections"); setMobileNavOpen(false); }}><span className="nav-icon">👑</span>Bridal Sets</a>
-          <a href="#" onClick={(e) => { e.preventDefault(); scrollTo("about"); setMobileNavOpen(false); }}><span className="nav-icon">🏠</span>About Us</a>
-          <a href="#" onClick={(e) => { e.preventDefault(); scrollTo("testimonials"); setMobileNavOpen(false); }}><span className="nav-icon">⭐</span>Reviews</a>
-          <a href="#" onClick={(e) => { e.preventDefault(); setMobileNavOpen(false); setAdminOpen(true); }}><span className="nav-icon">⚙️</span>Admin Panel</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); scrollTo("products"); setMobileNavOpen(false); }}><span className="nav-icon"><Icon name="diamond" /></span>Collections</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); scrollTo("categories"); setMobileNavOpen(false); }}><span className="nav-icon"><Icon name="sparkle" /></span>Categories</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); scrollTo("collections"); setMobileNavOpen(false); }}><span className="nav-icon"><Icon name="crown" /></span>Bridal Sets</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); scrollTo("about"); setMobileNavOpen(false); }}><span className="nav-icon"><Icon name="home" /></span>About Us</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); scrollTo("testimonials"); setMobileNavOpen(false); }}><span className="nav-icon"><Icon name="reviews" /></span>Reviews</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); setMobileNavOpen(false); setAdminOpen(true); }}><span className="nav-icon"><Icon name="settings" /></span>Admin Panel</a>
         </div>
       </div>
 
@@ -378,7 +434,7 @@ export default function Home() {
           <div className="hero-visual">
             <div className="hero-showcase">
               <div className="showcase-card big">
-                <div className="showcase-img" style={{ fontSize: "90px" }}>💎✨</div>
+                <div className="showcase-img" style={{ position: "relative" }}><Img src="/images/products/1.svg" alt="Bridal Set" sizes="300px" /></div>
                 <div className="showcase-info">
                   <div className="showcase-label">Best Seller — Bridal</div>
                   <div className="showcase-name">Impon Addigai Bridal Set</div>
@@ -386,7 +442,7 @@ export default function Home() {
                 </div>
               </div>
               <div className="showcase-card">
-                <div className="showcase-img" style={{ height: 120, fontSize: 44 }}>🪬</div>
+                <div className="showcase-img" style={{ position: "relative", height: 120 }}><Img src="/images/products/2.svg" alt="Temple Haram" sizes="200px" /></div>
                 <div className="showcase-info">
                   <div className="showcase-label">Necklace</div>
                   <div className="showcase-name">Temple Haram</div>
@@ -394,7 +450,7 @@ export default function Home() {
                 </div>
               </div>
               <div className="showcase-card">
-                <div className="showcase-img" style={{ height: 120, fontSize: 44 }}>💍</div>
+                <div className="showcase-img" style={{ position: "relative", height: 120 }}><Img src="/images/products/6.svg" alt="Finger Ring" sizes="200px" /></div>
                 <div className="showcase-info">
                   <div className="showcase-label">Rings</div>
                   <div className="showcase-name">Impon Finger Ring</div>
@@ -409,10 +465,10 @@ export default function Home() {
       {/* Features Strip */}
       <div className="features-strip">
         <div className="features-strip-inner">
-          <div className="feature-item"><span className="feature-icon">🚚</span><div><div className="feature-text-title">Free Shipping</div><div className="feature-text-desc">On orders above ₹1,999</div></div></div>
-          <div className="feature-item"><span className="feature-icon">✅</span><div><div className="feature-text-title">Quality Guaranteed</div><div className="feature-text-desc">Certified Impon & Gold Covering</div></div></div>
-          <div className="feature-item"><span className="feature-icon">↩️</span><div><div className="feature-text-title">Easy Returns</div><div className="feature-text-desc">7-day hassle-free returns</div></div></div>
-          <div className="feature-item"><span className="feature-icon">💬</span><div><div className="feature-text-title">WhatsApp Support</div><div className="feature-text-desc">Mon — Sat, 9am to 8pm</div></div></div>
+          <div className="feature-item"><span className="feature-icon"><Icon name="shipping" size={28} /></span><div><div className="feature-text-title">Free Shipping</div><div className="feature-text-desc">On orders above ₹1,999</div></div></div>
+          <div className="feature-item"><span className="feature-icon"><Icon name="quality" size={28} /></span><div><div className="feature-text-title">Quality Guaranteed</div><div className="feature-text-desc">Certified Impon & Gold Covering</div></div></div>
+          <div className="feature-item"><span className="feature-icon"><Icon name="returns" size={28} /></span><div><div className="feature-text-title">Easy Returns</div><div className="feature-text-desc">7-day hassle-free returns</div></div></div>
+          <div className="feature-item"><span className="feature-icon"><Icon name="support" size={28} /></span><div><div className="feature-text-title">WhatsApp Support</div><div className="feature-text-desc">Mon — Sat, 9am to 8pm</div></div></div>
         </div>
       </div>
 
@@ -430,7 +486,7 @@ export default function Home() {
               const n = products.filter((p) => p.category === c.name && p.status === "active").length;
               return (
                 <div key={c.id} className="cat-card" onClick={() => { setActiveFilter(c.name); scrollTo("products"); }}>
-                  <div className="cat-icon">{renderImageOrEmoji(c.image)}</div>
+                  <div className="cat-icon"><Img src={c.image} alt={c.name} sizes="160px" /></div>
                   <div className="cat-name">{c.name}</div>
                   <div className="cat-count">{n} piece{n !== 1 ? "s" : ""}</div>
                 </div>
@@ -464,13 +520,13 @@ export default function Home() {
               filteredProducts.map((p) => (
                 <div key={p.id} className="product-card" onClick={() => setModalProduct(p)}>
                   <div className="product-img">
-                    <span style={{ position: "relative", zIndex: 1 }}>{renderImageOrEmoji(p.image)}</span>
+                    <Img src={p.image} alt={p.name} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
                     {p.badge && (
                       <div className={`product-badge badge-${p.badge}`}>
                         {p.badge === "bridal" ? "Bridal" : p.badge === "trending" ? "Trending" : p.badge === "new" ? "New Arrival" : "Sale"}
                       </div>
                     )}
-                    <div className="product-wishlist" onClick={(e) => { e.stopPropagation(); showToast("❤️", "Added to wishlist!"); }}>♡</div>
+                    <div className="product-wishlist" onClick={(e) => { e.stopPropagation(); showToast("Heart", "Added to wishlist!"); }}><Icon name="heart" size={18} /></div>
                     <div className="product-overlay">
                       <button className="btn-add-cart" onClick={(e) => { e.stopPropagation(); addToCart(p.id); }}>Add to Cart</button>
                       <button className="btn-quick-view">Quick View</button>
@@ -502,7 +558,7 @@ export default function Home() {
           </div>
           <div className="collections-grid">
             <div className="coll-card coll-card-1">
-              <div className="coll-bg-emoji">👑</div>
+              <div className="coll-bg-emoji"><Img src="/images/products/9.svg" alt="Bridal Set" sizes="200px" /></div>
               <div className="coll-content">
                 <div className="coll-kicker">Bridal Exclusive</div>
                 <div className="coll-title">The Complete Bridal Impon Set</div>
@@ -511,7 +567,7 @@ export default function Home() {
               </div>
             </div>
             <div className="coll-card coll-card-2">
-              <div className="coll-bg-emoji">🪷</div>
+              <div className="coll-bg-emoji"><Img src="/images/products/11.svg" alt="Temple Jewellery" sizes="200px" /></div>
               <div className="coll-content">
                 <div className="coll-kicker">Festival Season</div>
                 <div className="coll-title">Temple &amp; Festive Jewellery</div>
@@ -527,16 +583,16 @@ export default function Home() {
       <section className="section about-section" id="about">
         <div className="section-inner">
           <div className="about-grid">
-            <div className="about-visual">💍</div>
+            <div className="about-visual" style={{ position: "relative" }}><Img src="/images/products/5.svg" alt="About Shanthi Gold" sizes="400px" /></div>
             <div>
               <div className="about-kicker">Our Story</div>
               <h2 className="about-title">Shanthi Gold Covering —<br /><em>Trusted Since 1989</em></h2>
               <p className="about-desc">With over 35 years of dedicated craftsmanship, Shanthi Gold Covering has become a trusted name for authentic Impon jewellery in Tamil Nadu. Our pieces are made using traditional five-metal (Panchaloha) techniques combined with modern micro gold plating for lasting quality and brilliant shine.</p>
               <div className="about-highlights">
-                <div className="hl-item"><div className="hl-icon">✅</div><div className="hl-text"><strong>Guaranteed Impon Quality</strong><span>All pieces made with genuine Panchaloha five-metal alloy, micro gold plated</span></div></div>
-                <div className="hl-item"><div className="hl-icon">✨</div><div className="hl-text"><strong>Traditional South Indian Designs</strong><span>Temple motifs, Lakshmi, Peacock, Ruby-Emerald kemp stone designs</span></div></div>
-                <div className="hl-item"><div className="hl-icon">👑</div><div className="hl-text"><strong>Complete Bridal Solutions</strong><span>Full bridal sets for weddings, engagements &amp; Seemantham ceremonies</span></div></div>
-                <div className="hl-item"><div className="hl-icon">💬</div><div className="hl-text"><strong>50,000+ Happy Customers</strong><span>Trusted by families across Tamil Nadu and beyond for three generations</span></div></div>
+                <div className="hl-item"><div className="hl-icon"><Icon name="quality" size={24} /></div><div className="hl-text"><strong>Guaranteed Impon Quality</strong><span>All pieces made with genuine Panchaloha five-metal alloy, micro gold plated</span></div></div>
+                <div className="hl-item"><div className="hl-icon"><Icon name="sparkle" size={24} /></div><div className="hl-text"><strong>Traditional South Indian Designs</strong><span>Temple motifs, Lakshmi, Peacock, Ruby-Emerald kemp stone designs</span></div></div>
+                <div className="hl-item"><div className="hl-icon"><Icon name="crown" size={24} /></div><div className="hl-text"><strong>Complete Bridal Solutions</strong><span>Full bridal sets for weddings, engagements &amp; Seemantham ceremonies</span></div></div>
+                <div className="hl-item"><div className="hl-icon"><Icon name="support" size={24} /></div><div className="hl-text"><strong>50,000+ Happy Customers</strong><span>Trusted by families across Tamil Nadu and beyond for three generations</span></div></div>
               </div>
               <button className="btn-primary" onClick={() => scrollTo("products")}>View All Products</button>
             </div>
@@ -556,17 +612,17 @@ export default function Home() {
             <div className="testi-card">
               <div className="testi-stars">★★★★★</div>
               <p className="testi-text">&quot;Bought the full bridal Impon set for my daughter&apos;s wedding. The quality was exactly as described — shiny, sturdy and absolutely beautiful. Every guest asked where we got it!&quot;</p>
-              <div className="testi-author"><div className="testi-avatar">👩</div><div><div className="testi-name">Meenakshi R.</div><div className="testi-role">Coimbatore</div></div></div>
+              <div className="testi-author"><div className="testi-avatar"><Icon name="heart" size={24} /></div><div><div className="testi-name">Meenakshi R.</div><div className="testi-role">Coimbatore</div></div></div>
             </div>
             <div className="testi-card">
               <div className="testi-stars">★★★★★</div>
               <p className="testi-text">&quot;The Impon bangles I ordered are perfect for daily wear. Even after 6 months the gold plating is intact! Shanthi Gold Covering never disappoints. Fast delivery too.&quot;</p>
-              <div className="testi-author"><div className="testi-avatar">👩</div><div><div className="testi-name">Kavitha S.</div><div className="testi-role">Chennai</div></div></div>
+              <div className="testi-author"><div className="testi-avatar"><Icon name="heart" size={24} /></div><div><div className="testi-name">Kavitha S.</div><div className="testi-role">Chennai</div></div></div>
             </div>
             <div className="testi-card">
               <div className="testi-stars">★★★★★</div>
               <p className="testi-text">&quot;Ordered the temple haram set for Navratri. The kemp stone work is so intricate and the finish is premium. Will definitely recommend Shanthi to all my friends and family.&quot;</p>
-              <div className="testi-author"><div className="testi-avatar">👩</div><div><div className="testi-name">Priya M.</div><div className="testi-role">Madurai</div></div></div>
+              <div className="testi-author"><div className="testi-avatar"><Icon name="heart" size={24} /></div><div><div className="testi-name">Priya M.</div><div className="testi-role">Madurai</div></div></div>
             </div>
           </div>
         </div>
@@ -575,12 +631,12 @@ export default function Home() {
       {/* Newsletter */}
       <section className="newsletter-section" id="newsletter">
         <div className="newsletter-inner">
-          <div className="newsletter-icon">💌</div>
+          <div className="newsletter-icon"><Icon name="mail" size={40} /></div>
           <h2 className="newsletter-title">Stay Updated</h2>
           <p className="newsletter-desc">Get first access to new Impon designs, festival offers &amp; exclusive bridal collections directly in your inbox.</p>
           <div className="newsletter-form">
             <input className="newsletter-input" type="email" placeholder="Your email address" />
-            <button className="newsletter-btn" onClick={() => showToast("📧", "Subscribed! Welcome to Shanthi Gold.")}>Subscribe</button>
+            <button className="newsletter-btn" onClick={() => showToast("Mail", "Subscribed! Welcome to Shanthi Gold.")}>Subscribe</button>
           </div>
         </div>
       </section>
@@ -598,10 +654,10 @@ export default function Home() {
               </div>
               <p className="footer-desc">Authentic Impon, Gold Covering &amp; micro gold-plated jewellery. Trusted craftsmanship since 1989. Serving 50,000+ families across Tamil Nadu.</p>
               <div className="footer-socials">
-                <div className="social-icon" title="Instagram">📸</div>
-                <div className="social-icon" title="WhatsApp">💬</div>
-                <div className="social-icon" title="Facebook">📘</div>
-                <div className="social-icon" title="YouTube">▶️</div>
+                <div className="social-icon" title="Instagram"><Icon name="instagram" size={24} /></div>
+                <div className="social-icon" title="WhatsApp"><Icon name="whatsapp" size={24} /></div>
+                <div className="social-icon" title="Facebook"><Icon name="facebook" size={24} /></div>
+                <div className="social-icon" title="YouTube"><Icon name="youtube" size={24} /></div>
               </div>
             </div>
             <div className="footer-col">
@@ -626,10 +682,10 @@ export default function Home() {
             </div>
             <div className="footer-col">
               <div className="footer-col-title">Contact Us</div>
-              <div className="footer-contact-item"><span className="footer-contact-icon">📍</span><span className="footer-contact-text">Coimbatore, Tamil Nadu, India</span></div>
-              <div className="footer-contact-item"><span className="footer-contact-icon">📞</span><span className="footer-contact-text">+91 98XXX XXXXX</span></div>
-              <div className="footer-contact-item"><span className="footer-contact-icon">💬</span><span className="footer-contact-text">WhatsApp: +91 98XXX XXXXX</span></div>
-              <div className="footer-contact-item"><span className="footer-contact-icon">🕐</span><span className="footer-contact-text">Mon–Sat: 9am – 8pm IST</span></div>
+              <div className="footer-contact-item"><span className="footer-contact-icon"><Icon name="location" size={18} /></span><span className="footer-contact-text">Coimbatore, Tamil Nadu, India</span></div>
+              <div className="footer-contact-item"><span className="footer-contact-icon"><Icon name="phone" size={18} /></span><span className="footer-contact-text">+91 9600325709</span></div>
+              <div className="footer-contact-item"><span className="footer-contact-icon"><Icon name="whatsapp" size={18} /></span><span className="footer-contact-text">WhatsApp: +91 9600325709</span></div>
+              <div className="footer-contact-item"><span className="footer-contact-icon"><Icon name="clock" size={18} /></span><span className="footer-contact-text">Mon–Sat: 9am – 8pm IST</span></div>
             </div>
           </div>
           <div className="footer-bottom">
@@ -653,14 +709,14 @@ export default function Home() {
         <div className="cart-items">
           {cart.length === 0 ? (
             <div className="cart-empty">
-              <div className="cart-empty-icon">🛒</div>
+              <div className="cart-empty-icon"><Icon name="cart" size={48} /></div>
               <p>Your cart is empty</p>
               <small style={{ color: "var(--color-gray)" }}>Add jewellery pieces to get started</small>
             </div>
           ) : (
             cart.map((item) => (
               <div key={item.id} className="cart-item">
-                <div className="cart-item-img">{renderImageOrEmoji(item.image)}</div>
+                <div className="cart-item-img"><Img src={item.image} alt={item.name} sizes="64px" /></div>
                 <div className="cart-item-info">
                   <div className="cart-item-name">{item.name}</div>
                   <div className="cart-item-cat">{item.category}</div>
@@ -671,7 +727,7 @@ export default function Home() {
                     <div className="qty-btn" onClick={() => changeQty(item.id, 1)}>+</div>
                   </div>
                 </div>
-                <div className="cart-item-remove" onClick={() => removeFromCart(item.id)}>🗑️</div>
+                <div className="cart-item-remove" onClick={() => removeFromCart(item.id)}><Icon name="trash" size={18} /></div>
               </div>
             ))
           )}
@@ -681,7 +737,7 @@ export default function Home() {
             <div className="cart-summary-row"><span>Subtotal</span><span>{currency}{cartValue.toLocaleString("en-IN")}</span></div>
             <div className="cart-summary-row"><span>Shipping</span><span style={{ color: "var(--color-success)" }}>FREE</span></div>
             <div className="cart-summary-row total"><span>Total</span><span>{currency}{cartValue.toLocaleString("en-IN")}</span></div>
-            <button className="btn-checkout" onClick={() => { showToast("📦", "Redirecting to checkout..."); setTimeout(() => setCartOpen(false), 800); }}>Proceed to Checkout</button>
+            <button className="btn-checkout" onClick={() => { showToast("Cart", "Redirecting to checkout..."); setTimeout(() => setCartOpen(false), 800); }}>Proceed to Checkout</button>
           </div>
         )}
       </div>
@@ -690,7 +746,7 @@ export default function Home() {
       <div className={`modal-overlay ${modalProduct ? "open" : ""}`} onClick={() => setModalProduct(null)}>
         {modalProduct && (
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-img">{renderImageOrEmoji(modalProduct.image)}</div>
+            <div className="modal-img"><Img src={modalProduct.image} alt={modalProduct.name} sizes="(max-width: 768px) 100vw, 50vw" /></div>
             <div className="modal-content">
               <div className="modal-category">{modalProduct.category}</div>
               <div className="modal-name">{modalProduct.name}</div>
@@ -747,23 +803,23 @@ export default function Home() {
               </div>
               <div className="admin-nav">
                 {[
-                  { id: "dashboard", icon: "📊", label: "Dashboard" },
-                  { id: "products-admin", icon: "💎", label: "Products" },
-                  { id: "add-product", icon: "➕", label: "Add Product" },
-                  { id: "categories-admin", icon: "📿", label: "Categories" },
-                  { id: "add-category", icon: "📁", label: "Add Category" },
+                  { id: "dashboard", icon: "dashboard", label: "Dashboard" },
+                  { id: "products-admin", icon: "diamond", label: "Products" },
+                  { id: "add-product", icon: "add", label: "Add Product" },
+                  { id: "categories-admin", icon: "sparkle", label: "Categories" },
+                  { id: "add-category", icon: "folder", label: "Add Category" },
                 ].map((item) => (
                   <div key={item.id} className={`admin-nav-item ${adminSection === item.id ? "active" : ""}`} onClick={() => setAdminSection(item.id)}>
-                    <span className="admin-nav-icon">{item.icon}</span><span>{item.label}</span>
+                    <span className="admin-nav-icon"><Icon name={item.icon} size={18} /></span><span>{item.label}</span>
                   </div>
                 ))}
                 <div className="admin-nav-divider"></div>
                 <div className={`admin-nav-item ${adminSection === "settings" ? "active" : ""}`} onClick={() => setAdminSection("settings")}>
-                  <span className="admin-nav-icon">⚙️</span><span>Settings</span>
+                  <span className="admin-nav-icon"><Icon name="settings" size={18} /></span><span>Settings</span>
                 </div>
               </div>
               <div className="admin-bottom">
-                <button className="admin-close-btn" onClick={handleLogout}><span>🚪</span><span>Logout</span></button>
+                <button className="admin-close-btn" onClick={handleLogout}><span><Icon name="logout" size={18} /></span><span>Logout</span></button>
                 <button className="admin-close-btn" style={{ marginTop: 6, background: "rgba(200,146,42,0.15)", color: "var(--color-gold3)", borderColor: "rgba(200,146,42,0.25)" }} onClick={() => setAdminOpen(false)}><span>✕</span><span>Close</span></button>
               </div>
             </div>
@@ -794,7 +850,7 @@ export default function Home() {
                       <tbody>
                         {products.map((p) => (
                           <tr key={p.id}>
-                            <td className="td-emoji">{renderImageOrEmoji(p.image, { fontSize: 24 })}</td>
+                            <td className="td-emoji"><div style={{ position: "relative", width: 40, height: 40, borderRadius: 8, overflow: "hidden" }}><Img src={p.image} alt={p.name} sizes="40px" /></div></td>
                             <td className="td-name">{p.name}</td>
                             <td>{p.category}</td>
                             <td className="td-price">{currency}{p.price.toLocaleString("en-IN")}</td>
@@ -810,10 +866,10 @@ export default function Home() {
                 {/* Add Product */}
                 <div className={`admin-section ${adminSection === "add-product" ? "active" : ""}`}>
                   <div className="form-section">
-                    <div className="form-section-title">💎 <span>{editingProduct !== null ? "Edit Product" : "Add New Product"}</span></div>
+                    <div className="form-section-title"><Icon name="diamond" size={20} /> <span>{editingProduct !== null ? "Edit Product" : "Add New Product"}</span></div>
                     <div className="form-grid">
                       <div className="form-group"><label className="form-label">Product Name *</label><input className="form-input" type="text" placeholder="e.g. Impon Addigai Necklace Set" value={pName} onChange={(e) => setPName(e.target.value)} /></div>
-                      <div className="form-group"><label className="form-label">Category *</label><select className="form-input form-select" value={pCategory} onChange={(e) => setPCategory(e.target.value)}><option value="">Select Category</option>{activeCategories.map((c) => <option key={c.id} value={c.name}>{c.image} {c.name}</option>)}</select></div>
+                      <div className="form-group"><label className="form-label">Category *</label><select className="form-input form-select" value={pCategory} onChange={(e) => setPCategory(e.target.value)}><option value="">Select Category</option>{activeCategories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}</select></div>
                       <div className="form-group"><label className="form-label">Price (₹) *</label><input className="form-input" type="number" placeholder="e.g. 2299" min="0" value={pPrice} onChange={(e) => setPPrice(e.target.value)} /></div>
                       <div className="form-group"><label className="form-label">Original Price ₹ (for sale)</label><input className="form-input" type="number" placeholder="e.g. 3500" min="0" value={pPriceOld} onChange={(e) => setPPriceOld(e.target.value)} /></div>
                       <div className="form-group full"><label className="form-label">Description</label><textarea className="form-input form-textarea" placeholder="Describe the jewellery piece..." value={pDesc} onChange={(e) => setPDesc(e.target.value)} /></div>
@@ -823,19 +879,19 @@ export default function Home() {
                         <input ref={pImageRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleImageUpload(e, setPImage)} />
                         {pImage ? (
                           <div style={{ position: "relative", width: 160, height: 160, borderRadius: 12, overflow: "hidden", border: "2px solid var(--color-gold3)" }}>
-                            {renderImageOrEmoji(pImage, { borderRadius: 12 })}
+                            <Img src={pImage} alt="Product preview" sizes="160px" />
                             <button onClick={() => setPImage("")} style={{ position: "absolute", top: 4, right: 4, width: 28, height: 28, borderRadius: "50%", background: "rgba(0,0,0,0.6)", color: "#fff", border: "none", cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
                           </div>
                         ) : (
                           <div onClick={() => pImageRef.current?.click()} style={{ width: 160, height: 160, borderRadius: 12, border: "2px dashed var(--color-gold3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", background: "rgba(200,146,42,0.05)", gap: 8 }}>
-                            <span style={{ fontSize: 32 }}>📷</span>
+                            <span style={{ fontSize: 32 }}><Icon name="add" size={32} /></span>
                             <span style={{ fontSize: 12, color: "var(--color-gray)" }}>Click to upload</span>
                           </div>
                         )}
                       </div>
                     </div>
                     <div className="form-btn-row" style={{ marginTop: 18 }}>
-                      <button className="btn-save" onClick={saveProduct}>💾 Save Product</button>
+                      <button className="btn-save" onClick={saveProduct}><Icon name="save" size={16} /> Save Product</button>
                       <button className="btn-cancel" onClick={() => { clearProductForm(); setEditingProduct(null); setAdminSection("products-admin"); }}>Cancel</button>
                     </div>
                   </div>
@@ -852,7 +908,7 @@ export default function Home() {
                           const n = products.filter((p) => p.category === c.name).length;
                           return (
                             <tr key={c.id}>
-                              <td className="td-emoji">{renderImageOrEmoji(c.image, { fontSize: 24 })}</td>
+                              <td className="td-emoji"><div style={{ position: "relative", width: 40, height: 40, borderRadius: 8, overflow: "hidden" }}><Img src={c.image} alt={c.name} sizes="40px" /></div></td>
                               <td className="td-name">{c.name}</td>
                               <td>{n}</td>
                               <td><span className={`td-badge ${c.status}`}>{c.status}</span></td>
@@ -868,7 +924,7 @@ export default function Home() {
                 {/* Add Category */}
                 <div className={`admin-section ${adminSection === "add-category" ? "active" : ""}`}>
                   <div className="form-section">
-                    <div className="form-section-title">📿 <span>{editingCategory !== null ? "Edit Category" : "Add New Category"}</span></div>
+                    <div className="form-section-title"><Icon name="sparkle" size={20} /> <span>{editingCategory !== null ? "Edit Category" : "Add New Category"}</span></div>
                     <div className="form-grid">
                       <div className="form-group"><label className="form-label">Category Name *</label><input className="form-input" type="text" placeholder="e.g. Maang Tikka" value={cName} onChange={(e) => setCName(e.target.value)} /></div>
                       <div className="form-group"><label className="form-label">Status</label><select className="form-input form-select" value={cStatus} onChange={(e) => setCStatus(e.target.value)}><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
@@ -876,19 +932,19 @@ export default function Home() {
                         <input ref={cImageRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleImageUpload(e, setCImage)} />
                         {cImage ? (
                           <div style={{ position: "relative", width: 120, height: 120, borderRadius: 12, overflow: "hidden", border: "2px solid var(--color-gold3)" }}>
-                            {renderImageOrEmoji(cImage, { borderRadius: 12 })}
+                            <Img src={cImage} alt="Category preview" sizes="120px" />
                             <button onClick={() => setCImage("")} style={{ position: "absolute", top: 4, right: 4, width: 28, height: 28, borderRadius: "50%", background: "rgba(0,0,0,0.6)", color: "#fff", border: "none", cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
                           </div>
                         ) : (
                           <div onClick={() => cImageRef.current?.click()} style={{ width: 120, height: 120, borderRadius: 12, border: "2px dashed var(--color-gold3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", background: "rgba(200,146,42,0.05)", gap: 8 }}>
-                            <span style={{ fontSize: 32 }}>📷</span>
+                            <span style={{ fontSize: 32 }}><Icon name="add" size={32} /></span>
                             <span style={{ fontSize: 12, color: "var(--color-gray)" }}>Click to upload</span>
                           </div>
                         )}
                       </div>
                     </div>
                     <div className="form-btn-row" style={{ marginTop: 18 }}>
-                      <button className="btn-save" onClick={saveCategory}>💾 Save Category</button>
+                      <button className="btn-save" onClick={saveCategory}><Icon name="save" size={16} /> Save Category</button>
                       <button className="btn-cancel" onClick={() => { setCName(""); setEditingCategory(null); setAdminSection("categories-admin"); }}>Cancel</button>
                     </div>
                   </div>
@@ -897,7 +953,7 @@ export default function Home() {
                 {/* Settings */}
                 <div className={`admin-section ${adminSection === "settings" ? "active" : ""}`}>
                   <div className="form-section">
-                    <div className="form-section-title">⚙️ Store Settings</div>
+                    <div className="form-section-title"><Icon name="settings" size={20} /> Store Settings</div>
                     <div className="form-grid">
                       <div className="form-group"><label className="form-label">Store Name</label><input className="form-input" type="text" value={settingsName} onChange={(e) => setSettingsName(e.target.value)} /></div>
                       <div className="form-group"><label className="form-label">Currency</label><select className="form-input form-select" value={settingsCurrency} onChange={(e) => setSettingsCurrency(e.target.value)}><option value="₹">INR (₹)</option><option value="$">USD ($)</option><option value="£">GBP (£)</option></select></div>
@@ -905,7 +961,7 @@ export default function Home() {
                       <div className="form-group"><label className="form-label">Phone / WhatsApp</label><input className="form-input" type="text" value={settingsPhone} onChange={(e) => setSettingsPhone(e.target.value)} /></div>
                       <div className="form-group"><label className="form-label">Address</label><input className="form-input" type="text" value={settingsAddress} onChange={(e) => setSettingsAddress(e.target.value)} /></div>
                     </div>
-                    <div className="form-btn-row" style={{ marginTop: 18 }}><button className="btn-save" onClick={saveSettings}>💾 Save Settings</button></div>
+                    <div className="form-btn-row" style={{ marginTop: 18 }}><button className="btn-save" onClick={saveSettings}><Icon name="save" size={16} /> Save Settings</button></div>
                   </div>
                 </div>
               </div>
@@ -917,9 +973,66 @@ export default function Home() {
       {/* Toast */}
       {toastMsg && (
         <div className={`toast ${toastMsg ? "show" : ""}`}>
-          <span>{toastMsg.icon}</span><span>{toastMsg.msg}</span>
+          <span><Icon name={toastIconMap[toastMsg.icon] || "sparkle"} size={18} /></span><span>{toastMsg.msg}</span>
         </div>
       )}
+
+      {/* Floating Chatbot */}
+      <div className={`chatbot ${chatOpen ? "open" : ""}`}>
+        {chatOpen && (
+          <div className="chatbot-window">
+            <div className="chatbot-header">
+              <div className="chatbot-header-info">
+                <div className="chatbot-avatar"><Icon name="diamond" size={22} /></div>
+                <div>
+                  <div className="chatbot-name">Shanthi Assistant</div>
+                  <div className="chatbot-status">Online • Jewellery Expert</div>
+                </div>
+              </div>
+              <button className="chatbot-close" onClick={() => setChatOpen(false)}><Icon name="close" size={18} /></button>
+            </div>
+            <div className="chatbot-messages">
+              {chatMessages.map((m, i) => (
+                <div key={i} className={`chat-msg ${m.role}`}>
+                  {m.role === "bot" && <div className="chat-msg-avatar"><Icon name="diamond" size={16} /></div>}
+                  <div className="chat-msg-bubble">{m.text.split("\n").map((line, j) => <span key={j}>{line}{j < m.text.split("\n").length - 1 && <br />}</span>)}</div>
+                </div>
+              ))}
+              {chatTyping && (
+                <div className="chat-msg bot">
+                  <div className="chat-msg-avatar"><Icon name="diamond" size={16} /></div>
+                  <div className="chat-msg-bubble chat-typing"><span></span><span></span><span></span></div>
+                </div>
+              )}
+            </div>
+            <div className="chatbot-quick">
+              {["Products", "Prices", "Shipping", "Bridal"].map((q) => (
+                <button key={q} className="chatbot-quick-btn" onClick={() => { setChatInput(q); setTimeout(sendChat, 50); }}>{q}</button>
+              ))}
+            </div>
+            <div className="chatbot-input-row">
+              <input className="chatbot-input" placeholder="Ask about our jewellery..." value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendChat()} />
+              <button className="chatbot-send" onClick={sendChat} disabled={!chatInput.trim()}><Icon name="add" size={20} /></button>
+            </div>
+            <div className="chatbot-footer-link">
+              <a href="https://wa.me/919600325709" target="_blank" rel="noopener noreferrer">Chat on WhatsApp instead</a>
+            </div>
+          </div>
+        )}
+        <div className="chatbot-fab" onClick={() => setChatOpen(!chatOpen)}>
+          {chatOpen ? <Icon name="close" size={26} /> : <Icon name="diamond" size={26} />}
+        </div>
+      </div>
+
+      {/* Floating Call Button */}
+      <a href="tel:+919600325709" className="fab fab-call" title="Call us">
+        <Icon name="phone" size={24} />
+      </a>
+
+      {/* Floating WhatsApp Button */}
+      <a href="https://wa.me/919600325709?text=Hi%20Shanthi%20Gold%20Covering!%20I%27m%20interested%20in%20your%20jewellery." target="_blank" rel="noopener noreferrer" className="fab fab-whatsapp" title="WhatsApp us">
+        <Icon name="whatsapp" size={26} />
+      </a>
     </>
   );
 }
